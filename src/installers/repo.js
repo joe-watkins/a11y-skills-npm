@@ -52,7 +52,7 @@ async function buildMcp({ dir, buildCommands }) {
     const parts = command.split(" ");
     const cmd = parts[0];
     const args = parts.slice(1);
-    await run(cmd, args, { cwd: dir });
+    await run(cmd, args, { cwd: dir, shell: true });
   }
 }
 
