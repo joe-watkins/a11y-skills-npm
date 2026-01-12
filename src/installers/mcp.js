@@ -37,15 +37,15 @@ function resolveServers(servers, repoDir, mcpRepoDir) {
   });
 }
 
-function mergeServers(existing, incoming) {
-  const existingServers = existing.mcpServers && typeof existing.mcpServers === "object"
-    ? existing.mcpServers
+function mergeServers(existing, incoming, serverKey = "servers") {
+  const existingServers = existing[serverKey] && typeof existing[serverKey] === "object"
+    ? existing[serverKey]
     : {};
 
-  const merged = { ...existing, mcpServers: { ...existingServers } };
+  const merged = { ...existing, [serverKey]: { ...existingServers } };
 
   for (const server of incoming) {
-    merged.mcpServers[server.name] = {
+    merged[serverKey][server.name] = {
       command: server.command,
       args: server.args || [],
       env: server.env || {},
@@ -56,10 +56,10 @@ function mergeServers(existing, incoming) {
   return merged;
 }
 
-async function installMcpConfig(configPath, servers) {
+async function installMcpConfig(configPath, servers, serverKey = "servers") {
   await fs.mkdir(path.dirname(configPath), { recursive: true });
   const existing = await loadJson(configPath);
-  const updated = mergeServers(existing, servers);
+  const updated = mergeServers(existing, servers, serverKey);
   await fs.writeFile(configPath, `${JSON.stringify(updated, null, 2)}\n`, "utf8");
 }
 

@@ -165,7 +165,7 @@ async function run() {
   const serverDefs = resolveServers(config.mcpServers, scopePaths.repoDir, scopePaths.mcpRepoDir);
   const mcpSpinner = startSpinner("Updating MCP configurations...");
   for (const ide of ideSelection) {
-    await installMcpConfig(idePaths[ide].mcpConfig, serverDefs);
+    await installMcpConfig(idePaths[ide].mcpConfig, serverDefs, idePaths[ide].mcpServerKey);
   }
   mcpSpinner.succeed(`MCP configs updated for ${ideSelection.length} IDE(s).`);
 
