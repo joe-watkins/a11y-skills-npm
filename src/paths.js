@@ -11,6 +11,10 @@ function getPlatform() {
   };
 }
 
+function getTempDir() {
+  return os.tmpdir();
+}
+
 function getAppSupportDir(platformInfo = getPlatform()) {
   if (platformInfo.isWindows) {
     return (
@@ -24,6 +28,15 @@ function getAppSupportDir(platformInfo = getPlatform()) {
   }
 
   return process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
+}
+
+function getMcpServerDir(home, ideSelection) {
+  // Single IDE: use IDE-specific path (~/.claude/mcp/servers/)
+  // Multiple IDEs: use shared path (~/.mcp/servers/)
+  if (ideSelection.length === 1) {
+    return path.join(home, `.${ideSelection[0]}`, "mcp", "servers");
+  }
+  return path.join(home, ".mcp", "servers");
 }
 
 function getIdePaths(projectRoot, platformInfo = getPlatform(), ideSkillsPaths = null) {
@@ -67,19 +80,6 @@ function getIdePaths(projectRoot, platformInfo = getPlatform(), ideSkillsPaths =
       mcpServerKey: "servers",
       skillsDir: path.join(home, skillsPaths.vscode),
       localSkillsDir: path.join(projectRoot, skillsPaths.vscode)
-    },
-    local: {
-      name: "Local Project",
-      skillsDir: path.join(projectRoot, skillsPaths.local),
-      repoDir: path.join(projectRoot, ".a11y-skills"),
-      mcpRepoDir: path.join(projectRoot, ".a11y-skills", "mcp"),
-      skillsRepoDir: path.join(projectRoot, ".a11y-skills", "skills")
-    },
-    global: {
-      name: "Global User",
-      repoDir: path.join(home, ".a11y-skills"),
-      mcpRepoDir: path.join(home, ".a11y-skills", "mcp"),
-      skillsRepoDir: path.join(home, ".a11y-skills", "skills")
     }
   };
 }
@@ -87,5 +87,7 @@ function getIdePaths(projectRoot, platformInfo = getPlatform(), ideSkillsPaths =
 export {
   getPlatform,
   getAppSupportDir,
-  getIdePaths
+  getIdePaths,
+  getMcpServerDir,
+  getTempDir
 };

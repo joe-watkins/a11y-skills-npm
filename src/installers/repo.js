@@ -56,41 +56,48 @@ async function buildMcp({ dir, buildCommands }) {
   }
 }
 
-async function createReadme(repoDir) {
-  const readmePath = path.join(repoDir, "README.md");
-  const content = `# A11y Skills & MCP Servers
+async function copyDirectory(source, dest) {
+  await fs.mkdir(dest, { recursive: true });
+  const entries = await fs.readdir(source, { withFileTypes: true });
 
-This directory contains accessibility skills and MCP (Model Context Protocol) servers.
+  for (const entry of entries) {
+    const srcPath = path.join(source, entry.name);
+    const destPath = path.join(dest, entry.name);
 
-## Structure
+    if (entry.isDirectory()) {
+      await copyDirectory(srcPath, destPath);
+    } else {
+      await fs.copyFile(srcPath, destPath);
+    }
+  }
+}
 
-- \`skills/\` - Accessibility skills for AI assistants
-- \`mcp/\` - MCP server implementations for accessibility tools
+async function copyMcpServers(tempMcpDir, finalMcpDir) {
+  if (!(await pathExists(tempMcpDir))) {
+    return;
+  }
 
-## Management
+  await fs.mkdir(finalMcpDir, { recursive: true });
+  const entries = await fs.readdir(tempMcpDir, { withFileTypes: true });
 
-This directory is managed by the \`a11y-skills-deploy\` CLI tool.
-To update or reconfigure, run:
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const srcPath = path.join(tempMcpDir, entry.name);
+      const destPath = path.join(finalMcpDir, entry.name);
+      await copyDirectory(srcPath, destPath);
+    }
+  }
+}
 
-\`\`\`bash
-npx a11y-skills-deploy
-\`\`\`
-
-## More Information
-
-- [A11y Skills Repository](https://github.com/joe-watkins/a11y-skills)
-- [WCAG MCP Server](https://github.com/joe-watkins/wcag-mcp)
-- [ARIA MCP Server](https://github.com/joe-watkins/aria-mcp)
-- [MagentaA11y MCP Server](https://github.com/joe-watkins/magentaa11y-mcp)
-- [A11y Personas MCP Server](https://github.com/joe-watkins/a11y-personas-mcp)
-- [A11y Issues Template MCP Server](https://github.com/joe-watkins/accessibility-issues-template-mcp)
-`;
-
-  await fs.writeFile(readmePath, content, "utf8");
+async function cleanupTemp(tempDir) {
+  if (await pathExists(tempDir)) {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
 }
 
 export {
   ensureRepo,
   buildMcp,
-  createReadme
+  copyMcpServers,
+  cleanupTemp
 };

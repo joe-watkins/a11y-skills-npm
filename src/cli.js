@@ -1,11 +1,12 @@
 import fs from "fs/promises";
+import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import prompts from "prompts";
 
 import { header, info, warn, success, startSpinner, formatPath } from "./ui.js";
-import { getPlatform, getIdePaths } from "./paths.js";
-import { ensureRepo, buildMcp, createReadme } from "./installers/repo.js";
+import { getPlatform, getIdePaths, getMcpServerDir, getTempDir } from "./paths.js";
+import { ensureRepo, buildMcp, copyMcpServers, cleanupTemp } from "./installers/repo.js";
 import { findSkillsDir, copySkills } from "./installers/skills.js";
 import { resolveServers, installMcpConfig } from "./installers/mcp.js";
 
@@ -26,10 +27,6 @@ function parseArgs(argv) {
   };
 }
 
-function resolveScope(repoPaths, scope) {
-  return scope === "local" ? repoPaths.local : repoPaths.global;
-}
-
 function formatOs(platformInfo) {
   if (platformInfo.isWindows) return "Windows";
   if (platformInfo.isMac) return "macOS";
@@ -43,8 +40,9 @@ async function run() {
   const config = await loadConfig();
   const idePaths = getIdePaths(projectRoot, platformInfo, config.ideSkillsPaths);
   const args = parseArgs(process.argv);
+  const homeDir = os.homedir();
 
-  header("A11y Skills Deploy", "Install skills + MCP servers across IDEs");
+  header("A11y Devkit Deploy", "Install skills + MCP servers across IDEs");
   info(`Detected OS: ${formatOs(platformInfo)}`);
 
   const ideChoices = [
@@ -109,23 +107,30 @@ async function run() {
     process.exit(1);
   }
 
-  const scopePaths = resolveScope(idePaths, scope);
   info(`Install scope: ${scope === "local" ? "Local" : "Global"}`);
-  info(`Repo path: ${formatPath(scopePaths.repoDir)}`);
 
-  // Clone skills repo into the skills subfolder
+  // Create temp directory for cloning and building
+  const tempDir = path.join(getTempDir(), `.a11y-devkit-${Date.now()}`);
+  const tempSkillsDir = path.join(tempDir, "skills");
+  const tempMcpDir = path.join(tempDir, "mcp");
+
+  // Determine MCP server destination based on IDE selection
+  const mcpServerDir = getMcpServerDir(homeDir, ideSelection);
+  info(`MCP servers: ${formatPath(mcpServerDir)}`);
+
+  // Clone skills repo into temp
   const repoSpinner = startSpinner("Syncing a11y-skills repo...");
   const repoResult = await ensureRepo({
     url: config.repo.url,
-    dir: scopePaths.skillsRepoDir
+    dir: tempSkillsDir
   });
   repoSpinner.succeed(`Repo ${repoResult.action}: ${formatPath(repoResult.dir)}`);
 
-  // Clone MCP repos
+  // Clone and build MCP repos in temp
   if (config.mcpRepos && config.mcpRepos.length > 0) {
     const mcpSpinner = startSpinner(`Syncing ${config.mcpRepos.length} MCP repos...`);
     for (const mcpRepo of config.mcpRepos) {
-      const mcpDir = path.join(scopePaths.mcpRepoDir, mcpRepo.dirName);
+      const mcpDir = path.join(tempMcpDir, mcpRepo.dirName);
       await ensureRepo({
         url: mcpRepo.url,
         dir: mcpDir
@@ -140,15 +145,17 @@ async function run() {
         });
       }
     }
-    mcpSpinner.succeed(`MCP repos synced to ${formatPath(scopePaths.mcpRepoDir)}`);
+    mcpSpinner.succeed(`MCP repos synced and built in temp directory`);
   }
 
-  // Create README in the main .a11y-skills directory
-  await createReadme(scopePaths.repoDir);
+  // Copy MCP servers from temp to final location
+  const copySpinner = startSpinner("Installing MCP servers...");
+  await copyMcpServers(tempMcpDir, mcpServerDir);
+  copySpinner.succeed(`MCP servers installed to ${formatPath(mcpServerDir)}`);
 
   if (installSkills) {
     const skillsSpinner = startSpinner("Installing skills to IDE folders...");
-    const sourceDir = await findSkillsDir(scopePaths.skillsRepoDir, config.skillsSearchPaths);
+    const sourceDir = await findSkillsDir(tempSkillsDir, config.skillsSearchPaths);
     if (!sourceDir) {
       skillsSpinner.fail("No skills directory found in repo.");
     } else {
@@ -166,12 +173,17 @@ async function run() {
     warn("Skipping skills install to IDE folders.");
   }
 
-  const serverDefs = resolveServers(config.mcpServers, scopePaths.repoDir, scopePaths.mcpRepoDir);
+  const serverDefs = resolveServers(config.mcpServers, mcpServerDir, mcpServerDir);
   const mcpSpinner = startSpinner("Updating MCP configurations...");
   for (const ide of ideSelection) {
     await installMcpConfig(idePaths[ide].mcpConfig, serverDefs, idePaths[ide].mcpServerKey);
   }
   mcpSpinner.succeed(`MCP configs updated for ${ideSelection.length} IDE(s).`);
+
+  // Clean up temporary directory
+  const cleanupSpinner = startSpinner("Cleaning up temporary files...");
+  await cleanupTemp(tempDir);
+  cleanupSpinner.succeed("Temporary files removed");
 
   success("All done. Your skills and MCP servers are ready.");
   info("You can re-run this CLI any time to update the repo and configs.");
