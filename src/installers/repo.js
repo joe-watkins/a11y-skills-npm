@@ -43,6 +43,20 @@ async function ensureRepo({ url, dir }) {
   return { action: "cloned", dir };
 }
 
+async function buildMcp({ dir, buildCommands }) {
+  if (!buildCommands || buildCommands.length === 0) {
+    return;
+  }
+
+  for (const command of buildCommands) {
+    const parts = command.split(" ");
+    const cmd = parts[0];
+    const args = parts.slice(1);
+    await run(cmd, args, { cwd: dir });
+  }
+}
+
 export {
-  ensureRepo
+  ensureRepo,
+  buildMcp
 };

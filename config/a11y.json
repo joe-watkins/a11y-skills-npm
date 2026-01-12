@@ -6,23 +6,28 @@
   "mcpRepos": [
     {
       "url": "https://github.com/joe-watkins/wcag-mcp",
-      "dirName": "wcag-mcp"
+      "dirName": "wcag-mcp",
+      "buildCommands": ["npm install", "npm run build"]
     },
     {
       "url": "https://github.com/joe-watkins/aria-mcp",
-      "dirName": "aria-mcp"
+      "dirName": "aria-mcp",
+      "buildCommands": ["npm install"]
     },
     {
       "url": "https://github.com/joe-watkins/magentaa11y-mcp",
-      "dirName": "magentaa11y-mcp"
+      "dirName": "magentaa11y-mcp",
+      "buildCommands": ["npm install", "npm run update-content"]
     },
     {
       "url": "https://github.com/joe-watkins/a11y-personas-mcp",
-      "dirName": "a11y-personas-mcp"
+      "dirName": "a11y-personas-mcp",
+      "buildCommands": ["npm install", "npm run build"]
     },
     {
       "url": "https://github.com/joe-watkins/accessibility-issues-template-mcp",
-      "dirName": "a11y-issues-template-mcp"
+      "dirName": "a11y-issues-template-mcp",
+      "buildCommands": ["npm install", "npm run build"]
     }
   ],
   "skillsSearchPaths": [

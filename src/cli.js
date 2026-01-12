@@ -5,7 +5,7 @@ import prompts from "prompts";
 
 import { header, info, warn, success, startSpinner, formatPath } from "./ui.js";
 import { getPlatform, getIdePaths } from "./paths.js";
-import { ensureRepo } from "./installers/repo.js";
+import { ensureRepo, buildMcp } from "./installers/repo.js";
 import { findSkillsDir, copySkills } from "./installers/skills.js";
 import { resolveServers, installMcpConfig } from "./installers/mcp.js";
 
@@ -129,6 +129,15 @@ async function run() {
         url: mcpRepo.url,
         dir: mcpDir
       });
+
+      // Build MCP if build commands are specified
+      if (mcpRepo.buildCommands) {
+        mcpSpinner.text = `Building ${mcpRepo.dirName}...`;
+        await buildMcp({
+          dir: mcpDir,
+          buildCommands: mcpRepo.buildCommands
+        });
+      }
     }
     mcpSpinner.succeed(`MCP repos synced to ${formatPath(scopePaths.mcpRepoDir)}`);
   }
