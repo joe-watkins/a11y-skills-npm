@@ -1,0 +1,67 @@
+{
+  "repo": {
+    "url": "https://github.com/joe-watkins/a11y-skills",
+    "dirName": "a11y-skills"
+  },
+  "mcpRepos": [
+    {
+      "url": "https://github.com/joe-watkins/wcag-mcp",
+      "dirName": "wcag-mcp"
+    },
+    {
+      "url": "https://github.com/joe-watkins/aria-mcp",
+      "dirName": "aria-mcp"
+    },
+    {
+      "url": "https://github.com/joe-watkins/magentaa11y-mcp",
+      "dirName": "magentaa11y-mcp"
+    },
+    {
+      "url": "https://github.com/joe-watkins/a11y-personas-mcp",
+      "dirName": "a11y-personas-mcp"
+    },
+    {
+      "url": "https://github.com/joe-watkins/accessibility-issues-template-mcp",
+      "dirName": "a11y-issues-template-mcp"
+    }
+  ],
+  "skillsSearchPaths": [
+    "skills",
+    ".github/skills",
+    ".codex/skills"
+  ],
+  "ideSkillsPaths": {
+    "claude": ".claude/skills",
+    "cursor": ".cursor/skills",
+    "codex": ".codex/skills",
+    "vscode": ".vscode/skills",
+    "local": ".github/skills"
+  },
+  "mcpServers": [
+    {
+      "name": "wcag-mcp",
+      "command": "node",
+      "args": ["{mcpRepoDir}/wcag-mcp/src/index.js"]
+    },
+    {
+      "name": "aria-mcp",
+      "command": "node",
+      "args": ["{mcpRepoDir}/aria-mcp/src/index.js"]
+    },
+    {
+      "name": "magentaa11y",
+      "command": "node",
+      "args": ["{mcpRepoDir}/magentaa11y-mcp/src/index.js"]
+    },
+    {
+      "name": "a11y-personas-mcp",
+      "command": "node",
+      "args": ["{mcpRepoDir}/a11y-personas-mcp/src/index.js"]
+    },
+    {
+      "name": "a11y-issues-template-mcp",
+      "command": "node",
+      "args": ["{mcpRepoDir}/accessibility-issues-template-mcp/build/index.js"]
+    }
+  ]
+}
