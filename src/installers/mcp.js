@@ -25,18 +25,6 @@ async function loadJson(filePath) {
   }
 }
 
-function resolveServers(servers, repoDir, mcpRepoDir) {
-  return servers.map((server) => {
-    const args = Array.isArray(server.args) ? server.args : [];
-    return {
-      ...server,
-      args: args.map((value) => 
-        value.replace("{repoDir}", repoDir).replace("{mcpRepoDir}", mcpRepoDir)
-      )
-    };
-  });
-}
-
 function mergeServers(existing, incoming, serverKey = "servers") {
   const existingServers = existing[serverKey] && typeof existing[serverKey] === "object"
     ? existing[serverKey]
@@ -47,9 +35,7 @@ function mergeServers(existing, incoming, serverKey = "servers") {
   for (const server of incoming) {
     merged[serverKey][server.name] = {
       command: server.command,
-      args: server.args || [],
-      env: server.env || {},
-      cwd: server.cwd
+      args: server.args || []
     };
   }
 
@@ -64,6 +50,5 @@ async function installMcpConfig(configPath, servers, serverKey = "servers") {
 }
 
 export {
-  resolveServers,
   installMcpConfig
 };

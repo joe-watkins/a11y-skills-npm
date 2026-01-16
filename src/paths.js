@@ -30,15 +30,6 @@ function getAppSupportDir(platformInfo = getPlatform()) {
   return process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
 }
 
-function getMcpServerDir(home, ideSelection) {
-  // Single IDE: use IDE-specific path (~/.claude/mcp/servers/)
-  // Multiple IDEs: use shared path (~/.mcp/servers/)
-  if (ideSelection.length === 1) {
-    return path.join(home, `.${ideSelection[0]}`, "mcp", "servers");
-  }
-  return path.join(home, ".mcp", "servers");
-}
-
 function getIdePaths(projectRoot, platformInfo = getPlatform(), ideSkillsPaths = null) {
   const appSupport = getAppSupportDir(platformInfo);
   const home = os.homedir();
@@ -88,6 +79,5 @@ export {
   getPlatform,
   getAppSupportDir,
   getIdePaths,
-  getMcpServerDir,
   getTempDir
 };

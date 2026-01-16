@@ -3,33 +3,6 @@
     "url": "https://github.com/joe-watkins/a11y-skills",
     "dirName": "a11y-skills"
   },
-  "mcpRepos": [
-    {
-      "url": "https://github.com/joe-watkins/wcag-mcp",
-      "dirName": "wcag-mcp",
-      "buildCommands": ["npm install", "npm run build"]
-    },
-    {
-      "url": "https://github.com/joe-watkins/aria-mcp",
-      "dirName": "aria-mcp",
-      "buildCommands": ["npm install"]
-    },
-    {
-      "url": "https://github.com/joe-watkins/magentaa11y-mcp",
-      "dirName": "magentaa11y-mcp",
-      "buildCommands": ["npm install", "npm run update-content"]
-    },
-    {
-      "url": "https://github.com/joe-watkins/a11y-personas-mcp",
-      "dirName": "a11y-personas-mcp",
-      "buildCommands": ["npm install", "npm run build"]
-    },
-    {
-      "url": "https://github.com/joe-watkins/accessibility-issues-template-mcp",
-      "dirName": "a11y-issues-template-mcp",
-      "buildCommands": ["npm install", "npm run build"]
-    }
-  ],
   "skillsSearchPaths": [
     ".",
     "skills",
@@ -45,29 +18,29 @@
   },
   "mcpServers": [
     {
-      "name": "wcag-mcp",
-      "command": "node",
-      "args": ["{mcpRepoDir}/wcag-mcp/src/index.js"]
+      "name": "wcag",
+      "command": "npx",
+      "args": ["-y", "wcag-mcp"]
     },
     {
-      "name": "aria-mcp",
-      "command": "node",
-      "args": ["{mcpRepoDir}/aria-mcp/src/index.js"]
+      "name": "aria",
+      "command": "npx",
+      "args": ["-y", "aria-mcp"]
     },
     {
       "name": "magentaa11y",
-      "command": "node",
-      "args": ["{mcpRepoDir}/magentaa11y-mcp/src/index.js"]
+      "command": "npx",
+      "args": ["-y", "magentaa11y-mcp"]
     },
     {
-      "name": "a11y-personas-mcp",
-      "command": "node",
-      "args": ["{mcpRepoDir}/a11y-personas-mcp/src/index.js"]
+      "name": "a11y-personas",
+      "command": "npx",
+      "args": ["-y", "a11y-personas-mcp"]
     },
     {
-      "name": "a11y-issues-template-mcp",
-      "command": "node",
-      "args": ["{mcpRepoDir}/accessibility-issues-template-mcp/build/index.js"]
+      "name": "arc-issues",
+      "command": "npx",
+      "args": ["-y", "arc-issues-mcp"]
     }
   ]
 }
