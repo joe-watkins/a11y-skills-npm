@@ -25,14 +25,27 @@ a11y-devkit-deploy
 
 This CLI automates the setup of accessibility tooling by:
 
-1. **Cloning the a11y-skills repository** - Contains IDE skills for accessibility workflows
-2. **Installing skills** - Copies skills to IDE-specific directories based on scope (local/global)
-3. **Configuring MCP servers** - Updates each IDE's MCP config to enable 5 accessibility-focused MCP servers:
+1. **Installing skills from npm** - Downloads and installs 7 accessibility skill packages
+2. **Configuring MCP servers** - Updates each IDE's MCP config to enable 5 accessibility-focused MCP servers:
    - **wcag** - WCAG 2.2 guidelines, success criteria, and techniques
    - **aria** - WAI-ARIA roles, states, properties, and patterns
    - **magentaa11y** - Component accessibility acceptance criteria
    - **a11y-personas** - Accessibility personas for diverse user needs
    - **arc-issues** - Format AxeCore violations into standardized issue templates
+
+### Skills Installed
+
+The following skill packages are installed from npm:
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| a11y-base-web | `a11y-base-web-skill` | Foundational accessibility patterns for web code |
+| a11y-issue-writer | `a11y-issue-writer-skill` | Write clear accessibility issue reports |
+| a11y-tester | `a11y-tester-skill` | Automated testing with axe-core and Playwright |
+| a11y-remediator | `a11y-remediator-skill` | Fix accessibility issues in code |
+| a11y-validator | `a11y-validator-skill` | Validate accessibility compliance |
+| web-standards | `web-standards-skill` | Web standards and best practices |
+| a11y-audit-fix-agent-orchestrator | `a11y-audit-fix-agent-orchestrator-skill` | Orchestrate full audit and fix workflows |
 
 ### No Local MCP Installation Required!
 
@@ -63,8 +76,7 @@ The generated MCP config looks like this:
 
 Edit `config/a11y.json` to customize the deployment:
 
-- `repo.url` - Main skills repository to clone
-- `skillsSearchPaths` - Directories to search for skills in the cloned repo
+- `skills` - Array of npm package names to install as skills
 - `ideSkillsPaths` - IDE-specific skills directories (configurable per IDE)
 - `mcpServers` - MCP server definitions using npx
 

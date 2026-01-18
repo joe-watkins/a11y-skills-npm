@@ -1,13 +1,11 @@
 import fs from "fs/promises";
-import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import prompts from "prompts";
 
 import { header, info, warn, success, startSpinner, formatPath } from "./ui.js";
 import { getPlatform, getIdePaths, getTempDir } from "./paths.js";
-import { ensureRepo, cleanupTemp } from "./installers/repo.js";
-import { findSkillsDir, copySkills } from "./installers/skills.js";
+import { installSkillsFromNpm, cleanupTemp } from "./installers/skills.js";
 import { installMcpConfig } from "./installers/mcp.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -108,33 +106,21 @@ async function run() {
 
   info(`Install scope: ${scope === "local" ? "Local" : "Global"}`);
 
-  // Create temp directory for cloning skills repo
+  // Create temp directory for npm install
   const tempDir = path.join(getTempDir(), `.a11y-devkit-${Date.now()}`);
-  const tempSkillsDir = path.join(tempDir, "skills");
-
-  // Clone skills repo into temp
-  const repoSpinner = startSpinner("Syncing a11y-skills repo...");
-  const repoResult = await ensureRepo({
-    url: config.repo.url,
-    dir: tempSkillsDir
-  });
-  repoSpinner.succeed(`Repo ${repoResult.action}: ${formatPath(repoResult.dir)}`);
 
   if (installSkills) {
-    const skillsSpinner = startSpinner("Installing skills to IDE folders...");
-    const sourceDir = await findSkillsDir(tempSkillsDir, config.skillsSearchPaths);
-    if (!sourceDir) {
-      skillsSpinner.fail("No skills directory found in repo.");
-    } else {
+    const skillsSpinner = startSpinner("Installing skills from npm...");
+
+    try {
       const skillTargets = scope === "local"
         ? ideSelection.map((ide) => idePaths[ide].localSkillsDir)
         : ideSelection.map((ide) => idePaths[ide].skillsDir);
 
-      for (const target of skillTargets) {
-        await copySkills(sourceDir, target);
-      }
-
-      skillsSpinner.succeed(`Skills installed to ${skillTargets.length} IDE location(s).`);
+      const result = await installSkillsFromNpm(config.skills, skillTargets, tempDir);
+      skillsSpinner.succeed(`${result.installed} skills installed to ${skillTargets.length} IDE location(s).`);
+    } catch (error) {
+      skillsSpinner.fail(`Failed to install skills: ${error.message}`);
     }
   } else {
     warn("Skipping skills install to IDE folders.");
@@ -153,8 +139,9 @@ async function run() {
   cleanupSpinner.succeed("Temporary files removed");
 
   success("All done. Your skills and MCP servers are ready.");
+  info("Skills installed from npm packages.");
   info("MCP servers use npx - no local installation needed!");
-  info("You can re-run this CLI any time to update the repo and configs.");
+  info("You can re-run this CLI any time to update skills and configs.");
 }
 
 export {

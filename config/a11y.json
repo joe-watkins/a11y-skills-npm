@@ -1,13 +1,12 @@
 {
-  "repo": {
-    "url": "https://github.com/joe-watkins/a11y-skills",
-    "dirName": "a11y-skills"
-  },
-  "skillsSearchPaths": [
-    ".",
-    "skills",
-    ".github/skills",
-    ".codex/skills"
+  "skills": [
+    "a11y-base-web-skill",
+    "a11y-issue-writer-skill",
+    "a11y-tester-skill",
+    "a11y-remediator-skill",
+    "a11y-validator-skill",
+    "web-standards-skill",
+    "a11y-audit-fix-agent-orchestrator-skill"
   ],
   "ideSkillsPaths": {
     "claude": ".claude/skills",
@@ -20,27 +19,42 @@
     {
       "name": "wcag",
       "command": "npx",
-      "args": ["-y", "wcag-mcp"]
+      "args": [
+        "-y",
+        "wcag-mcp"
+      ]
     },
     {
       "name": "aria",
       "command": "npx",
-      "args": ["-y", "aria-mcp"]
+      "args": [
+        "-y",
+        "aria-mcp"
+      ]
     },
     {
       "name": "magentaa11y",
       "command": "npx",
-      "args": ["-y", "magentaa11y-mcp"]
+      "args": [
+        "-y",
+        "magentaa11y-mcp"
+      ]
     },
     {
       "name": "a11y-personas",
       "command": "npx",
-      "args": ["-y", "a11y-personas-mcp"]
+      "args": [
+        "-y",
+        "a11y-personas-mcp"
+      ]
     },
     {
       "name": "arc-issues",
       "command": "npx",
-      "args": ["-y", "arc-issues-mcp"]
+      "args": [
+        "-y",
+        "arc-issues-mcp"
+      ]
     }
   ]
 }
