@@ -3,31 +3,45 @@
   "readmeTemplate": "deploy-README.md",
   "skills": [
     {
-      "name": "a11y-base-web-skill",
+      "name": "A11y Base Web Skill",
+      "npmName": "a11y-base-web-skill",
+      "npmURL": "https://www.npmjs.com/package/a11y-base-web-skill",
       "description": "Core accessibility testing utilities"
     },
     {
-      "name": "a11y-issue-writer-skill",
+      "name": "A11y Issue Writer Skill",
+      "npmName": "a11y-issue-writer-skill",
+      "npmURL": "https://www.npmjs.com/package/a11y-issue-writer-skill",
       "description": "Document accessibility issues"
     },
     {
-      "name": "a11y-tester-skill",
+      "name": "A11y Tester Skill",
+      "npmName": "a11y-tester-skill",
+      "npmURL": "https://www.npmjs.com/package/a11y-tester-skill",
       "description": "Run accessibility tests"
     },
     {
-      "name": "a11y-remediator-skill",
+      "name": "A11y Remediator Skill",
+      "npmName": "a11y-remediator-skill",
+      "npmURL": "https://www.npmjs.com/package/a11y-remediator-skill",
       "description": "Fix accessibility issues"
     },
     {
-      "name": "a11y-validator-skill",
+      "name": "A11y Validator Skill",
+      "npmName": "a11y-validator-skill",
+      "npmURL": "https://www.npmjs.com/package/a11y-validator-skill",
       "description": "Validate accessibility compliance"
     },
     {
-      "name": "web-standards-skill",
+      "name": "Web Standards Skill",
+      "npmName": "web-standards-skill",
+      "npmURL": "https://www.npmjs.com/package/web-standards-skill",
       "description": "Web standards reference"
     },
     {
-      "name": "a11y-audit-fix-agent-orchestrator-skill",
+      "name": "A11y Audit Fix Agent Orchestrator Skill",
+      "npmName": "a11y-audit-fix-agent-orchestrator-skill",
+      "npmURL": "https://www.npmjs.com/package/a11y-audit-fix-agent-orchestrator-skill",
       "description": "Orchestrate accessibility audits"
     }
   ],

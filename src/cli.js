@@ -71,67 +71,99 @@ async function run() {
   let selectedProfile = null;
   let skillsToInstall = [];
   let mcpServersToInstall = [];
+  let profileConfirmed = false;
 
-  if (!args.autoYes && config.profiles) {
-    const profileChoices = config.profiles.map((profile) => ({
-      title: profile.displayName,
-      description: profile.description,
-      value: profile.id,
-    }));
+  while (!profileConfirmed) {
+    if (!args.autoYes && config.profiles) {
+      const profileChoices = config.profiles.map((profile) => ({
+        title: profile.displayName,
+        description: profile.description,
+        value: profile.id,
+      }));
 
-    const profileResponse = await prompts(
-      {
-        type: "select",
-        name: "profile",
-        message: "Select your profile:",
-        choices: profileChoices,
-      },
-      {
-        onCancel: () => {
-          warn("Setup cancelled.");
-          process.exit(0);
+      const profileResponse = await prompts(
+        {
+          type: "select",
+          name: "profile",
+          message: "Select your profile:",
+          choices: profileChoices,
         },
-      },
-    );
-
-    selectedProfile = config.profiles.find((p) => p.id === profileResponse.profile);
-
-    if (selectedProfile) {
-      // Filter skills based on profile
-      skillsToInstall = config.skills.filter((skill) => {
-        const skillName = typeof skill === "string" ? skill : skill.name;
-        return selectedProfile.skills.includes(skillName);
-      });
-
-      // Filter MCP servers based on profile
-      mcpServersToInstall = config.mcpServers.filter((server) =>
-        selectedProfile.mcpServers.includes(server.name),
+        {
+          onCancel: () => {
+            warn("Setup cancelled.");
+            process.exit(0);
+          },
+        },
       );
 
-      console.log(`\n${selectedProfile.displayName} profile selected`);
+      selectedProfile = config.profiles.find((p) => p.id === profileResponse.profile);
+
+      if (selectedProfile) {
+        // Filter skills based on profile
+        skillsToInstall = config.skills.filter((skill) => {
+          const skillNpmName = typeof skill === "string" ? skill : skill.npmName;
+          return selectedProfile.skills.includes(skillNpmName);
+        });
+
+        // Filter MCP servers based on profile
+        mcpServersToInstall = config.mcpServers.filter((server) =>
+          selectedProfile.mcpServers.includes(server.name),
+        );
+
+        console.log(`\n${selectedProfile.displayName} profile selected`);
+      }
+    } else {
+      // If no profiles or auto-yes, use all skills and servers
+      skillsToInstall = config.skills;
+      mcpServersToInstall = config.mcpServers;
+      profileConfirmed = true; // Skip confirmation for auto-yes
     }
-  } else {
-    // If no profiles or auto-yes, use all skills and servers
-    skillsToInstall = config.skills;
-    mcpServersToInstall = config.mcpServers;
+
+    // Show what will be installed
+    if (!args.autoYes) {
+      console.log("\nSkills to install:");
+      skillsToInstall.forEach((skill) => {
+        const name = typeof skill === "string" ? skill : skill.name;
+        const description =
+          typeof skill === "string"
+            ? "No description"
+            : skill.description || "No description";
+        console.log(`  • ${name}`);
+        console.log(`    ${description}`);
+      });
+
+      console.log("\nMCP Servers to install:");
+      mcpServersToInstall.forEach((server) => {
+        const description = server.description || "No description";
+        console.log(`  • ${server.name}`);
+        console.log(`    ${description}`);
+      });
+      console.log("");
+
+      // Confirmation prompt
+      const confirmResponse = await prompts(
+        {
+          type: "confirm",
+          name: "continue",
+          message: "Continue with this configuration?",
+          initial: true,
+        },
+        {
+          onCancel: () => {
+            warn("Setup cancelled.");
+            process.exit(0);
+          },
+        },
+      );
+
+      if (confirmResponse.continue) {
+        profileConfirmed = true;
+      } else {
+        // User wants to go back - loop will restart profile selection
+        console.log("");
+      }
+    }
   }
-
-  console.log("\nSkills to install:");
-  skillsToInstall.forEach((skill) => {
-    const name = typeof skill === "string" ? skill : skill.name;
-    const description =
-      typeof skill === "string"
-        ? "No description"
-        : skill.description || "No description";
-    console.log(`- ${name}: ${description}`);
-  });
-
-  console.log("\nMCP Servers to install:");
-  mcpServersToInstall.forEach((server) => {
-    const description = server.description || "No description";
-    console.log(`${server.name} - ${description}`);
-  });
-  console.log("");
 
   const ideChoices = config.ides.map((ide) => ({
     title: ide.displayName,
@@ -225,7 +257,7 @@ async function run() {
         : ideSelection.map((ide) => idePaths[ide].skillsDir);
 
     const skillNames = skillsToInstall.map((skill) =>
-      typeof skill === "string" ? skill : skill.name,
+      typeof skill === "string" ? skill : skill.npmName,
     );
     const result = await installSkillsFromNpm(
       skillNames,

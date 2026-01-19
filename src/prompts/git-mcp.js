@@ -127,7 +127,7 @@ export function getGitMcpPrompts() {
     {
       type: "text",
       name: "args",
-      message: "Arguments for the command (comma-separated, optional):",
+      message: "Arguments for the command (typically relative path to mcp .js example: js/index.js):",
       initial: "",
     },
     {
