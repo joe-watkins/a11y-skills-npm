@@ -47,6 +47,7 @@ function getIdePaths(projectRoot, platformInfo = getPlatform(), ideSkillsPaths =
     claude: {
       name: "Claude Code",
       mcpConfig: path.join(appSupport, "Claude", "mcp.json"),
+      localMcpConfig: path.join(projectRoot, ".claude", "mcp.json"),
       mcpServerKey: "servers",
       skillsDir: path.join(home, skillsPaths.claude),
       localSkillsDir: path.join(projectRoot, skillsPaths.claude)
@@ -54,6 +55,7 @@ function getIdePaths(projectRoot, platformInfo = getPlatform(), ideSkillsPaths =
     cursor: {
       name: "Cursor",
       mcpConfig: path.join(appSupport, "Cursor", "mcp.json"),
+      localMcpConfig: path.join(projectRoot, ".cursor", "mcp.json"),
       mcpServerKey: "mcpServers",
       skillsDir: path.join(home, skillsPaths.cursor),
       localSkillsDir: path.join(projectRoot, skillsPaths.cursor)
@@ -61,6 +63,7 @@ function getIdePaths(projectRoot, platformInfo = getPlatform(), ideSkillsPaths =
     codex: {
       name: "Codex",
       mcpConfig: path.join(home, ".codex", "mcp.json"),
+      localMcpConfig: path.join(projectRoot, ".codex", "mcp.json"),
       mcpServerKey: "servers",
       skillsDir: path.join(home, skillsPaths.codex),
       localSkillsDir: path.join(projectRoot, skillsPaths.codex)
@@ -68,6 +71,7 @@ function getIdePaths(projectRoot, platformInfo = getPlatform(), ideSkillsPaths =
     vscode: {
       name: "VSCode",
       mcpConfig: path.join(appSupport, "Code", "User", "mcp.json"),
+      localMcpConfig: path.join(projectRoot, ".vscode", "mcp.json"),
       mcpServerKey: "servers",
       skillsDir: path.join(home, skillsPaths.vscode),
       localSkillsDir: path.join(projectRoot, skillsPaths.vscode)

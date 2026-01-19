@@ -70,13 +70,13 @@ async function run() {
   console.log("\nSkills to install:");
   config.skills.forEach((skill) => {
     const description = skillDescriptions[skill] || "No description";
-    info(`  ${skill} - ${description}`);
+    console.log(`${skill} - ${description}`);
   });
 
   console.log("\nMCP Servers to install:");
   config.mcpServers.forEach((server) => {
     const description = mcpDescriptions[server.name] || "No description";
-    info(`  ${server.name} - ${description}`);
+    console.log(`${server.name} - ${description}`);
   });
   console.log("");
 
@@ -88,6 +88,7 @@ async function run() {
   ];
 
   let scope = args.scope;
+  let mcpScope = null;
   let ideSelection = ["claude", "cursor", "codex", "vscode"];
   let installSkills = true;
 
@@ -99,8 +100,26 @@ async function run() {
           name: "scope",
           message: "Install skills + repo locally or globally?",
           choices: [
-            { title: "Local to this project", value: "local" },
+            { title: `Local to this project (${formatPath(projectRoot)})`, value: "local" },
             { title: "Global for this user", value: "global" }
+          ],
+          initial: 0
+        },
+        {
+          type: "select",
+          name: "mcpScope",
+          message: "Install MCP configs locally or globally?",
+          choices: [
+            {
+              title: `Local to this project (${formatPath(projectRoot)})`,
+              value: "local",
+              description: "Write to .claude/mcp.json, .cursor/mcp.json, etc. (version-controllable)"
+            },
+            {
+              title: "Global for this user",
+              value: "global",
+              description: "Write to ~/Library/Application Support/{IDE}/mcp.json"
+            }
           ],
           initial: 0
         },
@@ -129,6 +148,7 @@ async function run() {
     );
 
     scope = scope || response.scope;
+    mcpScope = response.mcpScope || "local";
     ideSelection = response.ides || ideSelection;
     installSkills = response.installSkills;
   }
@@ -136,13 +156,17 @@ async function run() {
   if (!scope) {
     scope = "local";
   }
+  if (!mcpScope) {
+    mcpScope = "local";
+  }
 
   if (!ideSelection.length) {
     warn("No IDEs selected. MCP installation requires at least one IDE.");
     process.exit(1);
   }
 
-  info(`Install scope: ${scope === "local" ? "Local" : "Global"}`);
+  info(`Skills scope: ${scope === "local" ? "Local" : "Global"}`);
+  info(`MCP scope: ${mcpScope === "local" ? "Local" : "Global"}`);
 
   // Create temp directory for npm install
   const tempDir = path.join(getTempDir(), `.a11y-devkit-${Date.now()}`);
@@ -166,10 +190,19 @@ async function run() {
 
   // Configure MCP servers using npx (no local installation needed!)
   const mcpSpinner = startSpinner("Updating MCP configurations...");
-  for (const ide of ideSelection) {
-    await installMcpConfig(idePaths[ide].mcpConfig, config.mcpServers, idePaths[ide].mcpServerKey);
+  const mcpConfigPaths = mcpScope === "local"
+    ? ideSelection.map((ide) => idePaths[ide].localMcpConfig)
+    : ideSelection.map((ide) => idePaths[ide].mcpConfig);
+
+  for (let i = 0; i < ideSelection.length; i++) {
+    const ide = ideSelection[i];
+    await installMcpConfig(
+      mcpConfigPaths[i],
+      config.mcpServers,
+      idePaths[ide].mcpServerKey
+    );
   }
-  mcpSpinner.succeed(`MCP configs updated for ${ideSelection.length} IDE(s).`);
+  mcpSpinner.succeed(`MCP configs updated for ${ideSelection.length} IDE(s) (${mcpScope} scope).`);
 
   // Clean up temporary directory
   const cleanupSpinner = startSpinner("Cleaning up temporary files...");
