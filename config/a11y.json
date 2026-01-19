@@ -119,6 +119,12 @@
       "description": "Pre-formatted a11y issue templates",
       "command": "npx",
       "args": ["-y", "arc-issues-mcp"]
+    },
+    {
+      "name": "playwright",
+      "description": "Enables LLMs to interact with web pages through structured accessibility snapshots.",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
     }
   ],
   "profiles": [
@@ -140,7 +146,8 @@
         "aria",
         "magentaa11y",
         "a11y-personas",
-        "arc-issues"
+        "arc-issues",
+        "playwright"
       ]
     },
     {
@@ -153,7 +160,8 @@
         "a11y-remediator-skill",
         "web-standards-skill",
         "a11y-audit-fix-agent-orchestrator-skill",
-        "a11y-validator-skill"
+        "a11y-validator-skill",
+        "playwright"
       ],
       "mcpServers": ["wcag", "aria", "magentaa11y", "a11y-personas"]
     },
@@ -186,7 +194,8 @@
         "aria",
         "magentaa11y",
         "a11y-personas",
-        "arc-issues"
+        "arc-issues",
+        "playwright"
       ]
     },
     {
@@ -212,14 +221,20 @@
       "displayName": "Product",
       "description": "For product managers and owners",
       "skills": ["a11y-base-web-skill", "web-standards-skill"],
-      "mcpServers": ["wcag", "magentaa11y", "a11y-personas"]
+      "mcpServers": ["wcag", "magentaa11y", "a11y-personas", "playwright"]
     },
     {
       "id": "design",
       "displayName": "Design",
       "description": "For designers creating accessible experiences",
       "skills": ["a11y-base-web-skill", "web-standards-skill"],
-      "mcpServers": ["wcag", "aria", "magentaa11y", "a11y-personas"]
+      "mcpServers": [
+        "wcag",
+        "aria",
+        "magentaa11y",
+        "a11y-personas",
+        "playwright"
+      ]
     },
     {
       "id": "hybrid",
@@ -239,7 +254,8 @@
         "aria",
         "magentaa11y",
         "a11y-personas",
-        "arc-issues"
+        "arc-issues",
+        "playwright"
       ]
     }
   ]
