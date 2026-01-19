@@ -66,6 +66,13 @@
       "mcpServerKey": "servers",
       "skillsFolder": ".codeium/windsurf/skills",
       "mcpConfigFile": ".codeium/windsurf/mcp_config.json"
+    },
+    {
+      "id": "factory",
+      "displayName": "Factory",
+      "mcpServerKey": "mcpServers",
+      "skillsFolder": ".factory/skills",
+      "mcpConfigFile": ".factory/mcp.json"
     }
   ],
   "mcpServers": [
