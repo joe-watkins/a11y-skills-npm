@@ -17,6 +17,30 @@ async function loadConfig() {
   return JSON.parse(raw);
 }
 
+async function loadPackageJson() {
+  const pkgPath = path.join(__dirname, "..", "package.json");
+  const raw = await fs.readFile(pkgPath, "utf8");
+  return JSON.parse(raw);
+}
+
+const skillDescriptions = {
+  "a11y-base-web-skill": "Core accessibility testing utilities",
+  "a11y-issue-writer-skill": "Document accessibility issues",
+  "a11y-tester-skill": "Run accessibility tests",
+  "a11y-remediator-skill": "Fix accessibility issues",
+  "a11y-validator-skill": "Validate accessibility compliance",
+  "web-standards-skill": "Web standards reference",
+  "a11y-audit-fix-agent-orchestrator-skill": "Orchestrate accessibility audits"
+};
+
+const mcpDescriptions = {
+  "wcag": "WCAG guidelines reference",
+  "aria": "ARIA specification reference",
+  "magentaa11y": "MagentaA11y accessibility acceptance criteria tool",
+  "a11y-personas": "Accessibility personas and user scenarios",
+  "arc-issues": "Pre-formatted a11y issue templates"
+};
+
 function parseArgs(argv) {
   const args = new Set(argv.slice(2));
   return {
@@ -36,11 +60,25 @@ async function run() {
   const projectRoot = process.cwd();
   const platformInfo = getPlatform();
   const config = await loadConfig();
+  const pkg = await loadPackageJson();
   const idePaths = getIdePaths(projectRoot, platformInfo, config.ideSkillsPaths);
   const args = parseArgs(process.argv);
 
-  header("A11y Devkit Deploy", "Install skills + MCP servers across IDEs");
+  header(`A11y Devkit Deploy v${pkg.version}`, "Install skills + MCP servers across IDEs");
   info(`Detected OS: ${formatOs(platformInfo)}`);
+
+  console.log("\nSkills to install:");
+  config.skills.forEach((skill) => {
+    const description = skillDescriptions[skill] || "No description";
+    info(`  ${skill} - ${description}`);
+  });
+
+  console.log("\nMCP Servers to install:");
+  config.mcpServers.forEach((server) => {
+    const description = mcpDescriptions[server.name] || "No description";
+    info(`  ${server.name} - ${description}`);
+  });
+  console.log("");
 
   const ideChoices = [
     { title: "Claude Code", value: "claude" },
