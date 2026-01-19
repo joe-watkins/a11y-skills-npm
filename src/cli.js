@@ -163,7 +163,7 @@ async function run() {
         : ideSelection.map((ide) => idePaths[ide].skillsDir);
 
       const skillNames = config.skills.map((skill) => typeof skill === "string" ? skill : skill.name);
-      const result = await installSkillsFromNpm(skillNames, skillTargets, tempDir);
+      const result = await installSkillsFromNpm(skillNames, skillTargets, tempDir, config.skillsFolder, config.readmeTemplate);
       skillsSpinner.succeed(`${result.installed} skills installed to ${skillTargets.length} IDE location(s).`);
     } catch (error) {
       skillsSpinner.fail(`Failed to install skills: ${error.message}`);
@@ -198,9 +198,10 @@ async function run() {
   info("MCP servers use npx - no local installation needed!");
   console.log("");
   success("Next Steps:");
+  const skillsFolderPath = config.skillsFolder ? `${config.skillsFolder}/` : "";
   const skillsPath = scope === "local"
-    ? `.claude/skills/README.md (or your IDE's equivalent)`
-    : `~/.claude/skills/README.md (or your IDE's global skills directory)`;
+    ? `.claude/skills/${skillsFolderPath}README.md (or your IDE's equivalent)`
+    : `~/.claude/skills/${skillsFolderPath}README.md (or your IDE's global skills directory)`;
   info(`📖 Check ${skillsPath} for comprehensive usage guide`);
   info("✨ Includes 70+ example prompts for all skills and MCP servers");
   info("🚀 Start with the 'Getting Started' section for your first accessibility check");

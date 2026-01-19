@@ -17,20 +17,32 @@ async function pathExists(target) {
 
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { stdio: "pipe", shell: true, ...options });
+    const child = spawn(command, args, {
+      stdio: "pipe",
+      shell: true,
+      ...options,
+    });
     let stdout = "";
     let stderr = "";
-    
-    child.stdout?.on("data", (data) => { stdout += data; });
-    child.stderr?.on("data", (data) => { stderr += data; });
-    
+
+    child.stdout?.on("data", (data) => {
+      stdout += data;
+    });
+    child.stderr?.on("data", (data) => {
+      stderr += data;
+    });
+
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) {
         resolve({ stdout, stderr });
         return;
       }
-      reject(new Error(`${command} ${args.join(" ")} failed with code ${code}: ${stderr}`));
+      reject(
+        new Error(
+          `${command} ${args.join(" ")} failed with code ${code}: ${stderr}`,
+        ),
+      );
     });
   });
 }
@@ -43,18 +55,26 @@ async function cleanupTemp(tempDir) {
 
 /**
  * Install skills from npm packages into IDE skills directories.
- * 
+ *
  * 1. Creates temp directory with package.json listing skills as dependencies
  * 2. Runs npm install in temp directory
  * 3. Copies installed skill packages (SKILL.md files) to target directories
  * 4. Returns temp directory path for cleanup
- * 
+ *
  * @param {string[]} skills - Array of npm package names
  * @param {string[]} targetDirs - Array of target directories to install skills to
  * @param {string} tempDir - Temporary directory for npm install
+ * @param {string} skillsFolder - Optional subfolder name to bundle skills (e.g., "a11y")
+ * @param {string} readmeTemplate - README template filename from templates folder
  * @returns {Promise<{installed: number, tempDir: string}>}
  */
-async function installSkillsFromNpm(skills, targetDirs, tempDir) {
+async function installSkillsFromNpm(
+  skills,
+  targetDirs,
+  tempDir,
+  skillsFolder = null,
+  readmeTemplate = "deploy-README.md",
+) {
   // Create temp directory
   await fs.mkdir(tempDir, { recursive: true });
 
@@ -63,7 +83,7 @@ async function installSkillsFromNpm(skills, targetDirs, tempDir) {
     name: "a11y-skills-temp",
     version: "1.0.0",
     private: true,
-    dependencies: {}
+    dependencies: {},
   };
 
   for (const skill of skills) {
@@ -72,7 +92,7 @@ async function installSkillsFromNpm(skills, targetDirs, tempDir) {
 
   await fs.writeFile(
     path.join(tempDir, "package.json"),
-    JSON.stringify(packageJson, null, 2)
+    JSON.stringify(packageJson, null, 2),
   );
 
   // Run npm install
@@ -83,7 +103,12 @@ async function installSkillsFromNpm(skills, targetDirs, tempDir) {
   let installedCount = 0;
 
   for (const targetDir of targetDirs) {
-    await fs.mkdir(targetDir, { recursive: true });
+    // Determine the actual skills directory (with or without bundle folder)
+    const skillsDir = skillsFolder
+      ? path.join(targetDir, skillsFolder)
+      : targetDir;
+
+    await fs.mkdir(skillsDir, { recursive: true });
 
     for (const skill of skills) {
       const skillPackageDir = path.join(nodeModulesDir, skill);
@@ -92,7 +117,7 @@ async function installSkillsFromNpm(skills, targetDirs, tempDir) {
       if (await pathExists(skillMdPath)) {
         // Create skill directory in target (use package name without -skill suffix)
         const skillDirName = skill.replace(/-skill$/, "");
-        const targetSkillDir = path.join(targetDir, skillDirName);
+        const targetSkillDir = path.join(skillsDir, skillDirName);
         await fs.mkdir(targetSkillDir, { recursive: true });
 
         // Copy SKILL.md
@@ -102,20 +127,23 @@ async function installSkillsFromNpm(skills, targetDirs, tempDir) {
     }
 
     // Copy the comprehensive README template to the skills directory
-    const readmeTemplatePath = path.join(__dirname, "..", "templates", "skills-README.md");
-    const targetReadmePath = path.join(targetDir, "README.md");
+    const readmeTemplatePath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "templates",
+      readmeTemplate,
+    );
+    const targetReadmePath = path.join(skillsDir, "a11y-devkit-README.md");
     if (await pathExists(readmeTemplatePath)) {
       await fs.copyFile(readmeTemplatePath, targetReadmePath);
     }
   }
 
-  return { 
-    installed: installedCount / targetDirs.length, 
-    tempDir 
+  return {
+    installed: installedCount / targetDirs.length,
+    tempDir,
   };
 }
 
-export {
-  installSkillsFromNpm,
-  cleanupTemp
-};
+export { installSkillsFromNpm, cleanupTemp };

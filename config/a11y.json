@@ -1,4 +1,6 @@
 {
+  "skillsFolder": "a11y",
+  "readmeTemplate": "deploy-README.md",
   "skills": [
     {
       "name": "a11y-base-web-skill",
@@ -33,8 +35,7 @@
     "claude": ".claude/skills",
     "cursor": ".cursor/skills",
     "codex": ".codex/skills",
-    "vscode": ".github/skills",
-    "local": ".github/skills"
+    "vscode": ".github/skills"
   },
   "ideMcpPaths": {
     "claude": ".claude/mcp.json",
@@ -47,46 +48,31 @@
       "name": "wcag",
       "description": "WCAG guidelines reference",
       "command": "npx",
-      "args": [
-        "-y",
-        "wcag-mcp"
-      ]
+      "args": ["-y", "wcag-mcp"]
     },
     {
       "name": "aria",
       "description": "ARIA specification reference",
       "command": "npx",
-      "args": [
-        "-y",
-        "aria-mcp"
-      ]
+      "args": ["-y", "aria-mcp"]
     },
     {
       "name": "magentaa11y",
       "description": "MagentaA11y accessibility acceptance criteria tool",
       "command": "npx",
-      "args": [
-        "-y",
-        "magentaa11y-mcp"
-      ]
+      "args": ["-y", "magentaa11y-mcp"]
     },
     {
       "name": "a11y-personas",
       "description": "Accessibility personas and user scenarios",
       "command": "npx",
-      "args": [
-        "-y",
-        "a11y-personas-mcp"
-      ]
+      "args": ["-y", "a11y-personas-mcp"]
     },
     {
       "name": "arc-issues",
       "description": "Pre-formatted a11y issue templates",
       "command": "npx",
-      "args": [
-        "-y",
-        "arc-issues-mcp"
-      ]
+      "args": ["-y", "arc-issues-mcp"]
     }
   ]
 }
