@@ -43,7 +43,7 @@ async function run() {
   const platformInfo = getPlatform();
   const config = await loadConfig();
   const pkg = await loadPackageJson();
-  const idePaths = getIdePaths(projectRoot, platformInfo, config.ideSkillsPaths, config.ideMcpPaths);
+  const idePaths = getIdePaths(projectRoot, platformInfo, config.ides);
   const args = parseArgs(process.argv);
 
   header(`A11y Devkit Deploy v${pkg.version}`, "Install skills + MCP servers across IDEs");
@@ -63,16 +63,14 @@ async function run() {
   });
   console.log("");
 
-  const ideChoices = [
-    { title: "Claude Code", value: "claude" },
-    { title: "Cursor", value: "cursor" },
-    { title: "Codex", value: "codex" },
-    { title: "VSCode", value: "vscode" }
-  ];
+  const ideChoices = config.ides.map((ide) => ({
+    title: ide.displayName,
+    value: ide.id
+  }));
 
   let scope = args.scope;
   let mcpScope = null;
-  let ideSelection = ["claude", "cursor", "codex", "vscode"];
+  let ideSelection = config.ides.map((ide) => ide.id);
   let installSkills = true;
 
   if (!args.autoYes) {

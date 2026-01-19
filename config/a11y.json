@@ -31,18 +31,43 @@
       "description": "Orchestrate accessibility audits"
     }
   ],
-  "ideSkillsPaths": {
-    "claude": ".claude/skills",
-    "cursor": ".cursor/skills",
-    "codex": ".codex/skills",
-    "vscode": ".github/skills"
-  },
-  "ideMcpPaths": {
-    "claude": ".claude/mcp.json",
-    "cursor": ".cursor/mcp.json",
-    "codex": ".codex/mcp.json",
-    "vscode": ".github/mcp.json"
-  },
+  "ides": [
+    {
+      "id": "claude",
+      "displayName": "Claude Code",
+      "mcpServerKey": "servers",
+      "skillsFolder": ".claude/skills",
+      "mcpConfigFile": ".claude/mcp.json"
+    },
+    {
+      "id": "cursor",
+      "displayName": "Cursor",
+      "mcpServerKey": "mcpServers",
+      "skillsFolder": ".cursor/skills",
+      "mcpConfigFile": ".cursor/mcp.json"
+    },
+    {
+      "id": "codex",
+      "displayName": "Codex",
+      "mcpServerKey": "servers",
+      "skillsFolder": ".codex/skills",
+      "mcpConfigFile": ".codex/mcp.json"
+    },
+    {
+      "id": "vscode",
+      "displayName": "VSCode",
+      "mcpServerKey": "servers",
+      "skillsFolder": ".github/skills",
+      "mcpConfigFile": ".github/mcp.json"
+    },
+    {
+      "id": "windsurf",
+      "displayName": "Windsurf",
+      "mcpServerKey": "servers",
+      "skillsFolder": ".codeium/windsurf/skills",
+      "mcpConfigFile": ".codeium/windsurf/mcp_config.json"
+    }
+  ],
   "mcpServers": [
     {
       "name": "wcag",
