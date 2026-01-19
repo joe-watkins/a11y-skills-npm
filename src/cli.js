@@ -212,7 +212,17 @@ async function run() {
   success("All done. Your skills and MCP servers are ready.");
   info("Skills installed from npm packages.");
   info("MCP servers use npx - no local installation needed!");
+  console.log("");
+  success("Next Steps:");
+  const skillsPath = scope === "local"
+    ? `.claude/skills/README.md (or your IDE's equivalent)`
+    : `~/.claude/skills/README.md (or your IDE's global skills directory)`;
+  info(`📖 Check ${skillsPath} for comprehensive usage guide`);
+  info("✨ Includes 70+ example prompts for all skills and MCP servers");
+  info("🚀 Start with the 'Getting Started' section for your first accessibility check");
+  console.log("");
   info("You can re-run this CLI any time to update skills and configs.");
+  info("Documentation: https://github.com/joe-watkins/a11y-devkit#readme");
 }
 
 export {

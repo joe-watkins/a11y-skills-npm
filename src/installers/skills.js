@@ -1,6 +1,10 @@
 import fs from "fs/promises";
 import path from "path";
 import { spawn } from "child_process";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function pathExists(target) {
   try {
@@ -95,6 +99,13 @@ async function installSkillsFromNpm(skills, targetDirs, tempDir) {
         await fs.copyFile(skillMdPath, path.join(targetSkillDir, "SKILL.md"));
         installedCount++;
       }
+    }
+
+    // Copy the comprehensive README template to the skills directory
+    const readmeTemplatePath = path.join(__dirname, "..", "templates", "skills-README.md");
+    const targetReadmePath = path.join(targetDir, "README.md");
+    if (await pathExists(readmeTemplatePath)) {
+      await fs.copyFile(readmeTemplatePath, targetReadmePath);
     }
   }
 

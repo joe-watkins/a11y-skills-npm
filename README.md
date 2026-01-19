@@ -21,6 +21,42 @@ a11y-devkit-deploy
 - `--local` / `--global`: Skip the scope prompt.
 - `--yes`: Use defaults (local scope, all IDEs, install skills).
 
+## After Installation
+
+Once installation completes, you'll find a comprehensive usage guide in your IDE's skills directory:
+
+- **Local install**: `.claude/skills/README.md` (or `.cursor/skills/`, `.codex/skills/` depending on your IDE)
+- **Global install**: `~/.claude/skills/README.md` (or your IDE's global skills directory)
+
+### What's in the Guide
+
+The bundled README includes:
+- **70+ example prompts** organized by complexity level (beginner to advanced)
+- **Quick reference cheat sheet** for common tasks
+- **Skill descriptions** explaining when to use each of the 7 skills
+- **MCP server guides** with verification steps and example queries
+- **Combined workflows** showing how to use skills and MCP servers together
+- **Complete audit examples** using the orchestrator for end-to-end accessibility testing
+
+### Preview the Guide
+
+You can preview the guide here: [templates/skills-README.md](templates/skills-README.md)
+
+### Next Steps
+
+1. Open the README in your IDE's skills directory
+2. Try the "Getting Started" prompts to verify everything is working
+3. Explore the example prompts library to find workflows that match your needs
+4. Use the MCP verification section to test all 5 MCP servers
+
+### MCP Servers
+
+All MCP servers are configured to run via `npx`, which means:
+- No local installation or cloning required
+- Automatically fetches the latest version when needed
+- No disk space used for local copies
+- Just restart your IDE and the servers will be available
+
 ## What It Does
 
 This CLI automates the setup of accessibility tooling by:
