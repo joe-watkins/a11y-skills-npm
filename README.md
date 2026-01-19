@@ -199,10 +199,20 @@ Add an object to the `hostApplications` array with the host application's config
       "mcpServerKey": "servers",
       "skillsFolder": ".codeium/windsurf/skills",
       "mcpConfigFile": ".codeium/windsurf/mcp_config.json"
+    },
+    {
+      "id": "vscode",
+      "displayName": "VSCode",
+      "mcpServerKey": "servers",
+      "skillsFolder": ".github/skills",
+      "mcpConfigFile": ".github/mcp.json",
+      "globalMcpConfigFile": "Code/User/mcp.json"
     }
   ]
 }
 ```
+
+**Note:** The `globalMcpConfigFile` property is optional. When specified, the global MCP config path is relative to the platform's app support directory (AppData on Windows, Application Support on macOS) instead of the home directory.
 
 **Host Application Configuration Properties:**
 - `id` - Unique identifier for the host application
@@ -210,6 +220,10 @@ Add an object to the `hostApplications` array with the host application's config
 - `mcpServerKey` - MCP config key name (`"servers"` or `"mcpServers"`)
 - `skillsFolder` - Path to skills directory (relative to home/project root)
 - `mcpConfigFile` - Path to MCP config file (relative to home/project root)
+- `globalMcpConfigFile` - (Optional) Path to global MCP config relative to AppData/Application Support instead of home directory. Used for hosts like VSCode that store configs in platform-specific app directories:
+  - Windows: `%APPDATA%` (e.g., `C:\Users\name\AppData\Roaming`)
+  - macOS: `~/Library/Application Support`
+  - Linux: `$XDG_CONFIG_HOME` or `~/.config`
 
 ### Config Structure
 
@@ -265,7 +279,6 @@ your-project/
   ├── mcp.json              # Codex global MCP config
   └── skills/               # Codex global skills
 ~/.github/
-  ├── mcp.json              # VSCode global MCP config
   └── skills/               # VSCode global skills
 ~/.codeium/windsurf/
   ├── mcp_config.json       # Windsurf global MCP config
@@ -273,6 +286,10 @@ your-project/
 ~/.factory/
   ├── mcp.json              # Factory global MCP config
   └── skills/               # Factory global skills
+
+# VSCode MCP config lives in AppData/Application Support:
+# Windows: %APPDATA%/Code/User/mcp.json
+# macOS:   ~/Library/Application Support/Code/User/mcp.json
 ```
 
 **Note:** Paths are fully customizable per IDE in `config/a11y.json`

@@ -72,7 +72,8 @@
       "displayName": "VSCode",
       "mcpServerKey": "servers",
       "skillsFolder": ".github/skills",
-      "mcpConfigFile": ".github/mcp.json"
+      "mcpConfigFile": ".github/mcp.json",
+      "globalMcpConfigFile": "Code/User/mcp.json"
     },
     {
       "id": "windsurf",
