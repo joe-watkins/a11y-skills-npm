@@ -2,21 +2,22 @@ import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Override kleur's gray color to make it more visible before prompts loads
+// Override kleur's gray color to add italics for better readability
 import kleur from "kleur";
 
-// Create a lighter gray by using a brighter color (ANSI 37 = white, dimmed slightly)
-// This makes helper text more readable while still being subtle
-const lighterGray = (text) => {
+// Use gray with italics (ANSI 90 for gray, 3 for italic, 23 to reset italic)
+// This matches the subtitle color but with italic styling
+const grayItalic = (text) => {
   if (typeof text === 'string') {
-    return `\x1b[37m${text}\x1b[39m`;
+    return `\x1b[3m\x1b[90m${text}\x1b[39m\x1b[23m`;
   }
-  return kleur.white;
+  // Return a function that applies both italic and gray
+  return (str) => `\x1b[3m\x1b[90m${str}\x1b[39m\x1b[23m`;
 };
 
-// Replace gray with a more visible alternative
+// Replace gray with italic gray for helper text
 Object.defineProperty(kleur, 'gray', {
-  get() { return lighterGray; },
+  get() { return grayItalic; },
   configurable: true
 });
 
