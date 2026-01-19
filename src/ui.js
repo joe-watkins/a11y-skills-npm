@@ -10,7 +10,7 @@ const bullets = {
 };
 
 function header(title, subtitle) {
-  const line = subtitle ? `${pc.dim(subtitle)}` : "";
+  const line = subtitle ? `${pc.gray(subtitle)}` : "";
   const content = [pc.bold(title), line].filter(Boolean).join("\n");
   console.log(
     boxen(content, {
@@ -43,7 +43,7 @@ function startSpinner(text) {
 }
 
 function formatPath(value) {
-  return pc.dim(value);
+  return pc.gray(value);
 }
 
 export {

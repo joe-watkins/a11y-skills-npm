@@ -1,6 +1,25 @@
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+
+// Override kleur's gray color to make it more visible before prompts loads
+import kleur from "kleur";
+
+// Create a lighter gray by using a brighter color (ANSI 37 = white, dimmed slightly)
+// This makes helper text more readable while still being subtle
+const lighterGray = (text) => {
+  if (typeof text === 'string') {
+    return `\x1b[37m${text}\x1b[39m`;
+  }
+  return kleur.white;
+};
+
+// Replace gray with a more visible alternative
+Object.defineProperty(kleur, 'gray', {
+  get() { return lighterGray; },
+  configurable: true
+});
+
 import prompts from "prompts";
 
 import { header, info, warn, success, startSpinner, formatPath } from "./ui.js";
@@ -46,6 +65,9 @@ function formatOs(platformInfo) {
 }
 
 async function run() {
+  // Clear console for a cleaner start
+  console.clear();
+
   const projectRoot = process.cwd();
   const platformInfo = getPlatform();
   const config = await loadConfig();
