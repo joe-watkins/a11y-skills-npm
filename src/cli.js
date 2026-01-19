@@ -61,7 +61,7 @@ async function run() {
   const platformInfo = getPlatform();
   const config = await loadConfig();
   const pkg = await loadPackageJson();
-  const idePaths = getIdePaths(projectRoot, platformInfo, config.ideSkillsPaths);
+  const idePaths = getIdePaths(projectRoot, platformInfo, config.ideSkillsPaths, config.ideMcpPaths);
   const args = parseArgs(process.argv);
 
   header(`A11y Devkit Deploy v${pkg.version}`, "Install skills + MCP servers across IDEs");
@@ -113,12 +113,12 @@ async function run() {
             {
               title: `Local to this project (${formatPath(projectRoot)})`,
               value: "local",
-              description: "Write to .claude/mcp.json, .cursor/mcp.json, etc. (version-controllable)"
+              description: "Write to project-level IDE config folders (version-controllable)"
             },
             {
               title: "Global for this user",
               value: "global",
-              description: "Write to ~/Library/Application Support/{IDE}/mcp.json"
+              description: "Write to user-level IDE config folders"
             }
           ],
           initial: 0

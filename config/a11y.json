@@ -15,6 +15,12 @@
     "vscode": ".github/skills",
     "local": ".github/skills"
   },
+  "ideMcpPaths": {
+    "claude": ".claude/mcp.json",
+    "cursor": ".cursor/mcp.json",
+    "codex": ".codex/mcp.json",
+    "vscode": ".github/mcp.json"
+  },
   "mcpServers": [
     {
       "name": "wcag",
