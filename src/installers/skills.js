@@ -15,6 +15,10 @@ async function pathExists(target) {
   }
 }
 
+function getSkillDirName(skillPackageName) {
+  return skillPackageName.replace(/-skill$/, "");
+}
+
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -50,6 +54,17 @@ function run(command, args, options = {}) {
 async function cleanupTemp(tempDir) {
   if (await pathExists(tempDir)) {
     await fs.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+async function removeDirIfEmpty(targetDir) {
+  if (!(await pathExists(targetDir))) {
+    return;
+  }
+
+  const entries = await fs.readdir(targetDir);
+  if (entries.length === 0) {
+    await fs.rmdir(targetDir);
   }
 }
 
@@ -116,7 +131,7 @@ async function installSkillsFromNpm(
 
       if (await pathExists(skillMdPath)) {
         // Create skill directory in target (use package name without -skill suffix)
-        const skillDirName = skill.replace(/-skill$/, "");
+        const skillDirName = getSkillDirName(skill);
         const targetSkillDir = path.join(skillsDir, skillDirName);
         await fs.mkdir(targetSkillDir, { recursive: true });
 
@@ -146,4 +161,49 @@ async function installSkillsFromNpm(
   };
 }
 
-export { installSkillsFromNpm, cleanupTemp };
+/**
+ * Remove skills installed by this tool from target directories.
+ *
+ * @param {string[]} skills - Array of npm package names
+ * @param {string[]} targetDirs - Array of target directories to uninstall from
+ * @param {string} skillsFolder - Optional subfolder name used for bundled skills
+ * @param {string} readmeTemplate - README template filename from templates folder
+ * @returns {Promise<{removed: number}>}
+ */
+async function uninstallSkillsFromTargets(
+  skills,
+  targetDirs,
+  skillsFolder = null,
+  readmeTemplate = "deploy-README.md",
+) {
+  let removedCount = 0;
+
+  for (const targetDir of targetDirs) {
+    const skillsDir = skillsFolder
+      ? path.join(targetDir, skillsFolder)
+      : targetDir;
+
+    for (const skill of skills) {
+      const skillDirName = getSkillDirName(skill);
+      const targetSkillDir = path.join(skillsDir, skillDirName);
+
+      if (await pathExists(targetSkillDir)) {
+        await fs.rm(targetSkillDir, { recursive: true, force: true });
+        removedCount++;
+      }
+    }
+
+    const readmePath = path.join(skillsDir, "a11y-devkit-README.md");
+    if (await pathExists(readmePath)) {
+      await fs.rm(readmePath, { force: true });
+    }
+
+    if (skillsFolder) {
+      await removeDirIfEmpty(skillsDir);
+    }
+  }
+
+  return { removed: removedCount };
+}
+
+export { installSkillsFromNpm, uninstallSkillsFromTargets, cleanupTemp };

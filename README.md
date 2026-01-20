@@ -22,6 +22,7 @@ a11y-devkit-deploy
 
 - `--local` / `--global`: Skip the scope prompt.
 - `--yes`: Use defaults (local scope, all IDEs, install skills).
+- `--uninstall`: Remove skills and MCP entries installed by this tool.
 
 ## After Installation
 

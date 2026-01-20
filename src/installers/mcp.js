@@ -49,6 +49,39 @@ function mergeServers(existing, incoming, serverKey = "servers") {
   return merged;
 }
 
+function removeServers(existing, removeNames, serverKey = "servers") {
+  const existingServers = existing[serverKey] && typeof existing[serverKey] === "object"
+    ? existing[serverKey]
+    : null;
+
+  if (!existingServers) {
+    return { updated: existing, removed: 0 };
+  }
+
+  const updatedServers = { ...existingServers };
+  let removed = 0;
+
+  for (const name of removeNames) {
+    if (Object.prototype.hasOwnProperty.call(updatedServers, name)) {
+      delete updatedServers[name];
+      removed++;
+    }
+  }
+
+  if (removed === 0) {
+    return { updated: existing, removed: 0 };
+  }
+
+  const updated = { ...existing };
+  if (Object.keys(updatedServers).length === 0) {
+    delete updated[serverKey];
+  } else {
+    updated[serverKey] = updatedServers;
+  }
+
+  return { updated, removed };
+}
+
 async function installMcpConfig(configPath, servers, serverKey = "servers") {
   await fs.mkdir(path.dirname(configPath), { recursive: true });
   const existing = await loadJson(configPath);
@@ -56,6 +89,23 @@ async function installMcpConfig(configPath, servers, serverKey = "servers") {
   await fs.writeFile(configPath, `${JSON.stringify(updated, null, 2)}\n`, "utf8");
 }
 
+async function removeMcpConfig(configPath, serverNames, serverKey = "servers") {
+  if (!(await pathExists(configPath))) {
+    return { removed: 0, changed: false };
+  }
+
+  const existing = await loadJson(configPath);
+  const { updated, removed } = removeServers(existing, serverNames, serverKey);
+
+  if (removed === 0) {
+    return { removed: 0, changed: false };
+  }
+
+  await fs.writeFile(configPath, `${JSON.stringify(updated, null, 2)}\n`, "utf8");
+  return { removed, changed: true };
+}
+
 export {
-  installMcpConfig
+  installMcpConfig,
+  removeMcpConfig
 };

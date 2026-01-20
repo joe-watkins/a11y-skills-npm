@@ -25,8 +25,8 @@ import prompts from "prompts";
 
 import { header, info, warn, success, startSpinner, formatPath } from "./ui.js";
 import { getPlatform, getHostApplicationPaths, getTempDir, getMcpRepoDir } from "./paths.js";
-import { installSkillsFromNpm, cleanupTemp } from "./installers/skills.js";
-import { installMcpConfig } from "./installers/mcp.js";
+import { installSkillsFromNpm, uninstallSkillsFromTargets, cleanupTemp } from "./installers/skills.js";
+import { installMcpConfig, removeMcpConfig } from "./installers/mcp.js";
 import { getGitMcpPrompts, parseArgsString } from "./prompts/git-mcp.js";
 import { installGitMcp } from "./installers/git-mcp.js";
 
@@ -55,6 +55,7 @@ function parseArgs(argv) {
         ? "local"
         : null,
     gitMcp: args.has("--git-mcp"),
+    uninstall: args.has("--uninstall"),
   };
 }
 
@@ -80,9 +81,21 @@ async function run() {
     `A11y Devkit Deploy v${pkg.version}`,
     args.gitMcp
       ? "Install MCP server from Git repository"
-      : "Install skills + MCP servers across host applications",
+      : args.uninstall
+        ? "Uninstall skills + MCP servers installed by this tool"
+        : "Install skills + MCP servers across host applications",
   );
   info(`Detected OS: ${formatOs(platformInfo)}`);
+
+  if (args.uninstall && args.gitMcp) {
+    warn("--uninstall cannot be used with --git-mcp.");
+    process.exit(1);
+  }
+
+  if (args.uninstall) {
+    await runUninstall(projectRoot, platformInfo, config, hostPaths, args);
+    return;
+  }
 
   // Branch to Git MCP installation flow
   if (args.gitMcp) {
@@ -338,6 +351,191 @@ async function run() {
   console.log("");
   info("You can re-run this CLI any time to update skills and configs.");
   info("Documentation: https://github.com/joe-watkins/a11y-devkit#readme");
+}
+
+async function runUninstall(projectRoot, platformInfo, config, hostPaths, args) {
+  console.log("\n");
+  info("Removing skills and MCP servers installed by this tool");
+  console.log("");
+
+  let removeSkills = true;
+  let removeMcp = true;
+  let scope = args.scope;
+  let mcpScope = null;
+  let hostSelection = config.hostApplications.map((host) => host.id);
+
+  if (!args.autoYes) {
+    const removeResponse = await prompts(
+      {
+        type: "multiselect",
+        name: "targets",
+        message: "Remove which items?",
+        choices: [
+          { title: "Skills", value: "skills" },
+          { title: "MCP servers", value: "mcp" },
+        ],
+        initial: [0, 1],
+      },
+      {
+        onCancel: () => {
+          warn("Uninstall cancelled.");
+          process.exit(0);
+        },
+      },
+    );
+
+    const selectedTargets = removeResponse.targets || [];
+    removeSkills = selectedTargets.includes("skills");
+    removeMcp = selectedTargets.includes("mcp");
+
+    if (!removeSkills && !removeMcp) {
+      warn("No items selected to uninstall.");
+      process.exit(0);
+    }
+  }
+
+  if (!args.autoYes) {
+    const hostChoices = config.hostApplications.map((host) => ({
+      title: host.displayName,
+      value: host.id,
+    }));
+
+    const questions = [];
+
+    if (removeSkills && !scope) {
+      questions.push({
+        type: "select",
+        name: "scope",
+        message: "Remove skills locally or globally?",
+        choices: [
+          {
+            title: `Local to this project (${formatPath(projectRoot)}) [recommended]`,
+            value: "local",
+          },
+          { title: "Global for this user", value: "global" },
+        ],
+        initial: 0,
+      });
+    }
+
+    if (removeMcp) {
+      questions.push({
+        type: "select",
+        name: "mcpScope",
+        message: "Remove MCP configs locally or globally?",
+        choices: [
+          {
+            title: `Local to this project (${formatPath(projectRoot)})`,
+            value: "local",
+            description:
+              "Remove from project-level host application config folders (version-controllable)",
+          },
+          {
+            title: "Global for this user",
+            value: "global",
+            description: "Remove from user-level host application config folders",
+          },
+        ],
+        initial: 0,
+      });
+    }
+
+    questions.push({
+      type: "multiselect",
+      name: "hosts",
+      message: "Remove from which host applications?",
+      choices: hostChoices,
+      initial: hostChoices.map((_, index) => index),
+    });
+
+    const response = await prompts(questions, {
+      onCancel: () => {
+        warn("Uninstall cancelled.");
+        process.exit(0);
+      },
+    });
+
+    scope = scope || response.scope;
+    mcpScope = response.mcpScope || mcpScope;
+    hostSelection = response.hosts || hostSelection;
+  }
+
+  if (removeSkills && !scope) {
+    scope = "local";
+  }
+
+  if (removeMcp && !mcpScope) {
+    mcpScope = "local";
+  }
+
+  if (!hostSelection.length) {
+    warn("No host applications selected. Uninstall requires at least one host application.");
+    process.exit(1);
+  }
+
+  if (removeSkills) {
+    info(`Skills scope: ${scope === "local" ? "Local" : "Global"}`);
+  }
+  if (removeMcp) {
+    info(`MCP scope: ${mcpScope === "local" ? "Local" : "Global"}`);
+  }
+
+  if (removeSkills) {
+    const skillsSpinner = startSpinner("Removing skills...");
+    try {
+      const skillTargets =
+        scope === "local"
+          ? hostSelection.map((host) => hostPaths[host].localSkillsDir)
+          : hostSelection.map((host) => hostPaths[host].skillsDir);
+
+      const skillNames = config.skills.map((skill) =>
+        typeof skill === "string" ? skill : skill.npmName,
+      );
+
+      const result = await uninstallSkillsFromTargets(
+        skillNames,
+        skillTargets,
+        config.skillsFolder,
+        config.readmeTemplate,
+      );
+      skillsSpinner.succeed(
+        `Removed ${result.removed} skill folder(s) from ${skillTargets.length} host application location(s).`,
+      );
+    } catch (error) {
+      skillsSpinner.fail(`Failed to remove skills: ${error.message}`);
+    }
+  }
+
+  if (removeMcp) {
+    const mcpSpinner = startSpinner("Removing MCP configurations...");
+    const mcpConfigPaths =
+      mcpScope === "local"
+        ? hostSelection.map((host) => hostPaths[host].localMcpConfig)
+        : hostSelection.map((host) => hostPaths[host].mcpConfig);
+
+    let removedCount = 0;
+    const serverNames = config.mcpServers.map((server) => server.name);
+
+    for (let i = 0; i < hostSelection.length; i++) {
+      const host = hostSelection[i];
+      const result = await removeMcpConfig(
+        mcpConfigPaths[i],
+        serverNames,
+        hostPaths[host].mcpServerKey,
+      );
+      removedCount += result.removed;
+    }
+
+    if (removedCount > 0) {
+      mcpSpinner.succeed(
+        `Removed ${removedCount} MCP entries from ${hostSelection.length} host application(s) (${mcpScope} scope).`,
+      );
+    } else {
+      mcpSpinner.succeed("No matching MCP entries found to remove.");
+    }
+  }
+
+  success("Uninstall complete.");
 }
 
 async function runGitMcpInstallation(projectRoot, platformInfo, config, hostPaths, args) {
