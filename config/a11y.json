@@ -161,10 +161,15 @@
         "a11y-remediator-skill",
         "web-standards-skill",
         "a11y-audit-fix-agent-orchestrator-skill",
-        "a11y-validator-skill",
-        "playwright"
+        "a11y-validator-skill"
       ],
-      "mcpServers": ["wcag", "aria", "magentaa11y", "a11y-personas"]
+      "mcpServers": [
+        "wcag",
+        "aria",
+        "magentaa11y",
+        "a11y-personas",
+        "playwright"
+      ]
     },
     {
       "id": "developer-ios",
