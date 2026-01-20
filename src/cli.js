@@ -8,7 +8,7 @@ import kleur from "kleur";
 // Use gray with italics (ANSI 90 for gray, 3 for italic, 23 to reset italic)
 // This matches the subtitle color but with italic styling
 const grayItalic = (text) => {
-  if (typeof text === 'string') {
+  if (typeof text === "string") {
     return `\x1b[3m\x1b[90m${text}\x1b[39m\x1b[23m`;
   }
   // Return a function that applies both italic and gray
@@ -16,16 +16,27 @@ const grayItalic = (text) => {
 };
 
 // Replace gray with italic gray for helper text
-Object.defineProperty(kleur, 'gray', {
-  get() { return grayItalic; },
-  configurable: true
+Object.defineProperty(kleur, "gray", {
+  get() {
+    return grayItalic;
+  },
+  configurable: true,
 });
 
 import prompts from "prompts";
 
 import { header, info, warn, success, startSpinner, formatPath } from "./ui.js";
-import { getPlatform, getHostApplicationPaths, getTempDir, getMcpRepoDir } from "./paths.js";
-import { installSkillsFromNpm, uninstallSkillsFromTargets, cleanupTemp } from "./installers/skills.js";
+import {
+  getPlatform,
+  getHostApplicationPaths,
+  getTempDir,
+  getMcpRepoDir,
+} from "./paths.js";
+import {
+  installSkillsFromNpm,
+  uninstallSkillsFromTargets,
+  cleanupTemp,
+} from "./installers/skills.js";
 import { installMcpConfig, removeMcpConfig } from "./installers/mcp.js";
 import { getGitMcpPrompts, parseArgsString } from "./prompts/git-mcp.js";
 import { installGitMcp } from "./installers/git-mcp.js";
@@ -74,7 +85,11 @@ async function run() {
   const platformInfo = getPlatform();
   const config = await loadConfig();
   const pkg = await loadPackageJson();
-  const hostPaths = getHostApplicationPaths(projectRoot, platformInfo, config.hostApplications);
+  const hostPaths = getHostApplicationPaths(
+    projectRoot,
+    platformInfo,
+    config.hostApplications,
+  );
   const args = parseArgs(process.argv);
 
   header(
@@ -99,7 +114,13 @@ async function run() {
 
   // Branch to Git MCP installation flow
   if (args.gitMcp) {
-    await runGitMcpInstallation(projectRoot, platformInfo, config, hostPaths, args);
+    await runGitMcpInstallation(
+      projectRoot,
+      platformInfo,
+      config,
+      hostPaths,
+      args,
+    );
     return;
   }
 
@@ -132,12 +153,15 @@ async function run() {
         },
       );
 
-      selectedProfile = config.profiles.find((p) => p.id === profileResponse.profile);
+      selectedProfile = config.profiles.find(
+        (p) => p.id === profileResponse.profile,
+      );
 
       if (selectedProfile) {
         // Filter skills based on profile
         skillsToInstall = config.skills.filter((skill) => {
-          const skillNpmName = typeof skill === "string" ? skill : skill.npmName;
+          const skillNpmName =
+            typeof skill === "string" ? skill : skill.npmName;
           return selectedProfile.skills.includes(skillNpmName);
         });
 
@@ -168,7 +192,7 @@ async function run() {
         console.log(`    ${description}`);
       });
 
-      console.log("\nMCP Servers to install:");
+      console.log("\nMCP Servers to install: [will install globally]");
       mcpServersToInstall.forEach((server) => {
         const description = server.description || "No description";
         console.log(`  • ${server.name}`);
@@ -240,7 +264,8 @@ async function run() {
             {
               title: "Global for this user",
               value: "global",
-              description: "Write to user-level host application config folders",
+              description:
+                "Write to user-level host application config folders",
             },
           ],
           initial: 0,
@@ -262,7 +287,9 @@ async function run() {
     );
 
     scope = scope || response.scope;
-    mcpScope = response.mcpScope || (config.supportLocalMcpInstallation ? "local" : "global");
+    mcpScope =
+      response.mcpScope ||
+      (config.supportLocalMcpInstallation ? "local" : "global");
     hostSelection = response.hosts || hostSelection;
   }
 
@@ -274,7 +301,9 @@ async function run() {
   }
 
   if (!hostSelection.length) {
-    warn("No host applications selected. MCP installation requires at least one host application.");
+    warn(
+      "No host applications selected. MCP installation requires at least one host application.",
+    );
     process.exit(1);
   }
 
@@ -318,10 +347,13 @@ async function run() {
 
   for (let i = 0; i < hostSelection.length; i++) {
     const host = hostSelection[i];
+    const serverKey = mcpScope === "global"
+      ? hostPaths[host].globalMcpServerKey
+      : hostPaths[host].mcpServerKey;
     await installMcpConfig(
       mcpConfigPaths[i],
       mcpServersToInstall,
-      hostPaths[host].mcpServerKey,
+      serverKey,
     );
   }
   mcpSpinner.succeed(
@@ -353,7 +385,13 @@ async function run() {
   info("Documentation: https://github.com/joe-watkins/a11y-devkit#readme");
 }
 
-async function runUninstall(projectRoot, platformInfo, config, hostPaths, args) {
+async function runUninstall(
+  projectRoot,
+  platformInfo,
+  config,
+  hostPaths,
+  args,
+) {
   console.log("\n");
   info("Removing skills and MCP servers installed by this tool");
   console.log("");
@@ -433,7 +471,8 @@ async function runUninstall(projectRoot, platformInfo, config, hostPaths, args) 
           {
             title: "Global for this user",
             value: "global",
-            description: "Remove from user-level host application config folders",
+            description:
+              "Remove from user-level host application config folders",
           },
         ],
         initial: 0,
@@ -469,7 +508,9 @@ async function runUninstall(projectRoot, platformInfo, config, hostPaths, args) 
   }
 
   if (!hostSelection.length) {
-    warn("No host applications selected. Uninstall requires at least one host application.");
+    warn(
+      "No host applications selected. Uninstall requires at least one host application.",
+    );
     process.exit(1);
   }
 
@@ -518,10 +559,13 @@ async function runUninstall(projectRoot, platformInfo, config, hostPaths, args) 
 
     for (let i = 0; i < hostSelection.length; i++) {
       const host = hostSelection[i];
+      const serverKey = mcpScope === "global"
+        ? hostPaths[host].globalMcpServerKey
+        : hostPaths[host].mcpServerKey;
       const result = await removeMcpConfig(
         mcpConfigPaths[i],
         serverNames,
-        hostPaths[host].mcpServerKey,
+        serverKey,
       );
       removedCount += result.removed;
     }
@@ -538,7 +582,13 @@ async function runUninstall(projectRoot, platformInfo, config, hostPaths, args) 
   success("Uninstall complete.");
 }
 
-async function runGitMcpInstallation(projectRoot, platformInfo, config, hostPaths, args) {
+async function runGitMcpInstallation(
+  projectRoot,
+  platformInfo,
+  config,
+  hostPaths,
+  args,
+) {
   // Check if --yes flag is used with --git-mcp
   if (args.autoYes) {
     warn("--yes flag not supported for Git MCP installation");
@@ -592,7 +642,9 @@ async function runGitMcpInstallation(projectRoot, platformInfo, config, hostPath
 
   // Prompt for MCP Config Scope (where to write MCP configurations)
   // Skip if local MCP installation is not supported
-  let mcpScopeResponse = { mcpScope: config.supportLocalMcpInstallation ? null : "global" };
+  let mcpScopeResponse = {
+    mcpScope: config.supportLocalMcpInstallation ? null : "global",
+  };
 
   if (config.supportLocalMcpInstallation) {
     mcpScopeResponse = await prompts(
@@ -648,7 +700,9 @@ async function runGitMcpInstallation(projectRoot, platformInfo, config, hostPath
   const hostSelection = hostResponse.hosts || [];
 
   if (!hostSelection.length) {
-    warn("No host applications selected. MCP installation requires at least one host application.");
+    warn(
+      "No host applications selected. MCP installation requires at least one host application.",
+    );
     process.exit(1);
   }
 
@@ -715,10 +769,13 @@ async function runGitMcpInstallation(projectRoot, platformInfo, config, hostPath
 
   for (let i = 0; i < hostSelection.length; i++) {
     const host = hostSelection[i];
+    const serverKey = mcpScope === "global"
+      ? hostPaths[host].globalMcpServerKey
+      : hostPaths[host].mcpServerKey;
     await installMcpConfig(
       mcpConfigPaths[i],
       [mcpServerConfig],
-      hostPaths[host].mcpServerKey,
+      serverKey,
     );
   }
 
@@ -729,7 +786,9 @@ async function runGitMcpInstallation(projectRoot, platformInfo, config, hostPath
   // Display success message
   success("Git MCP installation complete!");
   info(`Repository location: ${mcpServer.repoPath}`);
-  info(`MCP server '${mcpServer.name}' configured in ${hostSelection.length} host application(s)`);
+  info(
+    `MCP server '${mcpServer.name}' configured in ${hostSelection.length} host application(s)`,
+  );
   console.log("");
   success("Next Steps:");
   info("Restart your host application to load the new MCP server");
@@ -738,4 +797,3 @@ async function runGitMcpInstallation(projectRoot, platformInfo, config, hostPath
 }
 
 export { run };
-

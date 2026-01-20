@@ -57,6 +57,7 @@ function getHostApplicationPaths(projectRoot, platformInfo = getPlatform(), host
       mcpConfig: globalMcpConfig,
       localMcpConfig: path.join(projectRoot, mcpConfigFile),
       mcpServerKey: host.mcpServerKey,
+      globalMcpServerKey: host.globalMcpServerKey || host.mcpServerKey,
       skillsDir: globalSkillsDir,
       localSkillsDir: path.join(projectRoot, skillsFolder)
     };

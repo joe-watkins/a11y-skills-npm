@@ -51,13 +51,15 @@
       "id": "claude",
       "displayName": "Claude Code",
       "mcpServerKey": "servers",
+      "globalMcpServerKey": "mcpServers",
       "skillsFolder": ".claude/skills",
-      "mcpConfigFile": ".claude/mcp.json"
+      "mcpConfigFile": ".claude.json"
     },
     {
       "id": "cursor",
       "displayName": "Cursor",
       "mcpServerKey": "mcpServers",
+      "globalMcpServerKey": "mcpServers",
       "skillsFolder": ".cursor/skills",
       "mcpConfigFile": ".cursor/mcp.json"
     },
@@ -65,6 +67,7 @@
       "id": "codex",
       "displayName": "Codex",
       "mcpServerKey": "mcp_servers",
+      "globalMcpServerKey": "mcp_servers",
       "skillsFolder": ".codex/skills",
       "mcpConfigFile": ".codex/config.toml"
     },
@@ -72,6 +75,7 @@
       "id": "vscode",
       "displayName": "VSCode",
       "mcpServerKey": "servers",
+      "globalMcpServerKey": "servers",
       "skillsFolder": ".github/skills",
       "mcpConfigFile": ".github/mcp.json",
       "globalMcpConfigFile": "Code/User/mcp.json"
@@ -80,6 +84,7 @@
       "id": "windsurf",
       "displayName": "Windsurf",
       "mcpServerKey": "servers",
+      "globalMcpServerKey": "servers",
       "skillsFolder": ".codeium/windsurf/skills",
       "mcpConfigFile": ".codeium/windsurf/mcp_config.json"
     },
@@ -87,6 +92,7 @@
       "id": "factory",
       "displayName": "Factory",
       "mcpServerKey": "mcpServers",
+      "globalMcpServerKey": "mcpServers",
       "skillsFolder": ".factory/skills",
       "mcpConfigFile": ".factory/mcp.json"
     }
