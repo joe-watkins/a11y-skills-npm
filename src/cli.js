@@ -179,25 +179,151 @@ async function run() {
       profileConfirmed = true; // Skip confirmation for auto-yes
     }
 
+    if (!args.autoYes) {
+      const selectionModeMessage = selectedProfile?.displayName
+        ? `Install which sets for: ${selectedProfile.displayName}?`
+        : "Install which sets?";
+      const selectionModeResponse = await prompts(
+        {
+          type: "select",
+          name: "selectionMode",
+          message: selectionModeMessage,
+          choices: [
+            {
+              title: "Install all Skills and MCP (recommended)",
+              value: "all",
+            },
+            {
+              title:
+                "Choose which Skills and MCP to install (warning some Skills have MCP dependencies)",
+              value: "choose",
+            },
+          ],
+          initial: 0,
+        },
+        {
+          onCancel: () => {
+            warn("Setup cancelled.");
+            process.exit(0);
+          },
+        },
+      );
+
+      if (selectionModeResponse.selectionMode === "choose") {
+        if (config.skills?.length) {
+          const selectedSkillNames = new Set(
+            skillsToInstall.map((skill) =>
+              typeof skill === "string" ? skill : skill.npmName,
+            ),
+          );
+          const skillChoices = config.skills.map((skill) => ({
+            title: typeof skill === "string" ? skill : skill.name,
+            description:
+              typeof skill === "string"
+                ? "No description"
+                : skill.description || "No description",
+            value: typeof skill === "string" ? skill : skill.npmName,
+          }));
+          const initialSkillIndexes = skillChoices
+            .map((choice, index) =>
+              selectedSkillNames.has(choice.value) ? index : null,
+            )
+            .filter((index) => index !== null);
+
+          const skillsResponse = await prompts(
+            {
+              type: "multiselect",
+              name: "skills",
+              message: "Select skills to install:",
+              choices: skillChoices,
+              initial: initialSkillIndexes,
+            },
+            {
+              onCancel: () => {
+                warn("Setup cancelled.");
+                process.exit(0);
+              },
+            },
+          );
+
+          const selectedSkills = skillsResponse.skills || [];
+          skillsToInstall = config.skills.filter((skill) => {
+            const skillNpmName =
+              typeof skill === "string" ? skill : skill.npmName;
+            return selectedSkills.includes(skillNpmName);
+          });
+        } else {
+          skillsToInstall = [];
+        }
+
+        if (config.mcpServers?.length) {
+          const selectedMcpNames = new Set(
+            mcpServersToInstall.map((server) => server.name),
+          );
+          const mcpChoices = config.mcpServers.map((server) => ({
+            title: server.name,
+            description: server.description || "No description",
+            value: server.name,
+          }));
+          const initialMcpIndexes = mcpChoices
+            .map((choice, index) =>
+              selectedMcpNames.has(choice.value) ? index : null,
+            )
+            .filter((index) => index !== null);
+
+          const mcpResponse = await prompts(
+            {
+              type: "multiselect",
+              name: "mcpServers",
+              message: "Select MCP servers to install:",
+              choices: mcpChoices,
+              initial: initialMcpIndexes,
+            },
+            {
+              onCancel: () => {
+                warn("Setup cancelled.");
+                process.exit(0);
+              },
+            },
+          );
+
+          const selectedMcpServers = mcpResponse.mcpServers || [];
+          mcpServersToInstall = config.mcpServers.filter((server) =>
+            selectedMcpServers.includes(server.name),
+          );
+        } else {
+          mcpServersToInstall = [];
+        }
+      }
+    }
+
     // Show what will be installed
     if (!args.autoYes) {
       console.log("\nSkills to install:");
-      skillsToInstall.forEach((skill) => {
-        const name = typeof skill === "string" ? skill : skill.name;
-        const description =
-          typeof skill === "string"
-            ? "No description"
-            : skill.description || "No description";
-        console.log(`  • ${name}`);
-        console.log(`    ${description}`);
-      });
+      if (skillsToInstall.length === 0) {
+        console.log("  • None");
+      } else {
+        skillsToInstall.forEach((skill) => {
+          const name = typeof skill === "string" ? skill : skill.name;
+          const description =
+            typeof skill === "string"
+              ? "No description"
+              : skill.description || "No description";
+          console.log(`  • ${name}`);
+          console.log(`    ${description}`);
+        });
+      }
 
       console.log("\nMCP Servers to install: [will install globally]");
-      mcpServersToInstall.forEach((server) => {
-        const description = server.description || "No description";
-        console.log(`  • ${server.name}`);
-        console.log(`    ${description}`);
-      });
+      if (mcpServersToInstall.length === 0) {
+        console.log("  • None");
+      } else {
+        mcpServersToInstall.forEach((server) => {
+          const description = server.description || "No description";
+          console.log(`  • ${server.name}`);
+          console.log(`    ${description}`);
+        });
+      }
       console.log("");
 
       // Confirmation prompt
@@ -233,11 +359,16 @@ async function run() {
   let scope = args.scope;
   let hostSelection = config.hostApplications.map((host) => host.id);
 
+  if (skillsToInstall.length === 0 && mcpServersToInstall.length === 0) {
+    warn("No skills or MCP servers selected. Nothing to install.");
+    process.exit(0);
+  }
+
   if (!args.autoYes) {
     const response = await prompts(
       [
         {
-          type: scope ? null : "select",
+          type: scope || skillsToInstall.length === 0 ? null : "select",
           name: "scope",
           message: "Install skills locally or globally?",
           choices: [
@@ -269,98 +400,122 @@ async function run() {
     hostSelection = response.hosts || hostSelection;
   }
 
-  if (!scope) {
+  if (!scope && skillsToInstall.length > 0) {
     scope = "local";
   }
 
   if (!hostSelection.length) {
     warn(
-      "No host applications selected. MCP installation requires at least one host application.",
+      "No host applications selected. Installation requires at least one host application.",
     );
     process.exit(1);
   }
 
-  info(`Skills scope: ${scope === "local" ? "Local" : "Global"}`);
-  info("MCP configs: Global (user-level)");
-
-  // Create temp directory for npm install
-  const tempDir = path.join(getTempDir(), `.a11y-devkit-${Date.now()}`);
-
-  const skillsSpinner = startSpinner("Installing skills from npm...");
-
-  try {
-    const skillTargets = hostSelection.map((hostId) => {
-      const host = config.hostApplications.find((h) => h.id === hostId);
-      const targetPath =
-        scope === "local"
-          ? hostPaths[hostId].localSkillsDir
-          : hostPaths[hostId].skillsDir;
-      return {
-        path: targetPath,
-        shouldNest: host.nestSkillsFolder ?? true, // Default to true for backwards compatibility
-      };
-    });
-
-    const skillNames = skillsToInstall.map((skill) =>
-      typeof skill === "string" ? skill : skill.npmName,
-    );
-    const result = await installSkillsFromNpm(
-      skillNames,
-      skillTargets,
-      tempDir,
-      config.skillsFolder,
-      config.readmeTemplate,
-    );
-    skillsSpinner.succeed(
-      `${result.installed} skills installed to ${skillTargets.length} host application location(s).`,
-    );
-  } catch (error) {
-    skillsSpinner.fail(`Failed to install skills: ${error.message}`);
+  if (skillsToInstall.length > 0) {
+    info(`Skills scope: ${scope === "local" ? "Local" : "Global"}`);
+  }
+  if (mcpServersToInstall.length > 0) {
+    info("MCP configs: Global (user-level)");
   }
 
-  // Configure MCP servers using npx (no local installation needed!)
-  const mcpSpinner = startSpinner("Updating MCP configurations...");
-  const mcpConfigPaths = hostSelection.map((host) => hostPaths[host].mcpConfig);
+  let tempDir = null;
 
-  for (let i = 0; i < hostSelection.length; i++) {
-    const host = hostSelection[i];
-    const serverKey = hostPaths[host].mcpServerKey;
-    await installMcpConfig(
-      mcpConfigPaths[i],
-      mcpServersToInstall,
-      serverKey,
-      platformInfo,
+  if (skillsToInstall.length > 0) {
+    // Create temp directory for npm install
+    tempDir = path.join(getTempDir(), `.a11y-devkit-${Date.now()}`);
+
+    const skillsSpinner = startSpinner("Installing skills from npm...");
+
+    try {
+      const skillTargets = hostSelection.map((hostId) => {
+        const host = config.hostApplications.find((h) => h.id === hostId);
+        const targetPath =
+          scope === "local"
+            ? hostPaths[hostId].localSkillsDir
+            : hostPaths[hostId].skillsDir;
+        return {
+          path: targetPath,
+          shouldNest: host.nestSkillsFolder ?? true, // Default to true for backwards compatibility
+        };
+      });
+
+      const skillNames = skillsToInstall.map((skill) =>
+        typeof skill === "string" ? skill : skill.npmName,
+      );
+      const result = await installSkillsFromNpm(
+        skillNames,
+        skillTargets,
+        tempDir,
+        config.skillsFolder,
+        config.readmeTemplate,
+      );
+      skillsSpinner.succeed(
+        `${result.installed} skills installed to ${skillTargets.length} host application location(s).`,
+      );
+    } catch (error) {
+      skillsSpinner.fail(`Failed to install skills: ${error.message}`);
+    }
+  }
+
+  if (mcpServersToInstall.length > 0) {
+    // Configure MCP servers using npx (no local installation needed!)
+    const mcpSpinner = startSpinner("Updating MCP configurations...");
+    const mcpConfigPaths = hostSelection.map(
+      (host) => hostPaths[host].mcpConfig,
+    );
+
+    for (let i = 0; i < hostSelection.length; i++) {
+      const host = hostSelection[i];
+      const serverKey = hostPaths[host].mcpServerKey;
+      await installMcpConfig(
+        mcpConfigPaths[i],
+        mcpServersToInstall,
+        serverKey,
+        platformInfo,
+      );
+    }
+    mcpSpinner.succeed(
+      `MCP configs updated for ${hostSelection.length} host application(s) (global scope).`,
     );
   }
-  mcpSpinner.succeed(
-    `MCP configs updated for ${hostSelection.length} host application(s) (global scope).`,
-  );
 
   // Clean up temporary directory
-  const cleanupSpinner = startSpinner("Cleaning up temporary files...");
-  await cleanupTemp(tempDir);
-  cleanupSpinner.succeed("Temporary files removed");
+  if (tempDir) {
+    const cleanupSpinner = startSpinner("Cleaning up temporary files...");
+    await cleanupTemp(tempDir);
+    cleanupSpinner.succeed("Temporary files removed");
+  }
 
   success("All done. Your skills and MCP servers are ready.");
-  info("Skills installed from npm packages.");
-  info("MCP servers use npx - no local installation needed!");
+  if (skillsToInstall.length > 0) {
+    info("Skills installed from npm packages.");
+  }
+  if (mcpServersToInstall.length > 0) {
+    info("MCP servers use npx - no local installation needed!");
+  }
   console.log("");
-  success("Next Steps:");
-  // Determine the README path based on the first selected host's nesting preference
-  const firstHost = config.hostApplications.find((h) => h.id === hostSelection[0]);
-  const firstHostSkillsPath = scope === "local"
-    ? hostPaths[hostSelection[0]].localSkillsDir
-    : hostPaths[hostSelection[0]].skillsDir;
-  const skillsFolderPath = (firstHost?.nestSkillsFolder ?? true) && config.skillsFolder
-    ? `${config.skillsFolder}/`
-    : "";
-  const skillsPath = `${firstHostSkillsPath}/${skillsFolderPath}a11y-devkit-README.md`;
-  info(`📖 Check ${skillsPath} for comprehensive usage guide`);
-  info("✨ Includes 70+ example prompts for all skills and MCP servers");
-  info(
-    "🚀 Start with the 'Getting Started' section for your first accessibility check",
-  );
-  console.log("");
+  if (skillsToInstall.length > 0) {
+    success("Next Steps:");
+    // Determine the README path based on the first selected host's nesting preference
+    const firstHost = config.hostApplications.find(
+      (h) => h.id === hostSelection[0],
+    );
+    const firstHostSkillsPath =
+      scope === "local"
+        ? hostPaths[hostSelection[0]].localSkillsDir
+        : hostPaths[hostSelection[0]].skillsDir;
+    const skillsFolderPath =
+      (firstHost?.nestSkillsFolder ?? true) && config.skillsFolder
+        ? `${config.skillsFolder}/`
+        : "";
+    const skillsPath = `${firstHostSkillsPath}/${skillsFolderPath}a11y-devkit-README.md`;
+    info(`📖 Check ${skillsPath} for comprehensive usage guide`);
+    info("✨ Includes 70+ example prompts for all skills and MCP servers");
+    info(
+      "🚀 Start with the 'Getting Started' section for your first accessibility check",
+    );
+    console.log("");
+  }
   info("You can re-run this CLI any time to update skills and configs.");
   info("Documentation: https://github.com/joe-watkins/a11y-devkit#readme");
 }
